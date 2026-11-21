@@ -195,10 +195,11 @@ for one check, the date's, in step 3:
    true for none, False to keep a search), then GET page 1 and check they
    took. This runs whatever happened in step 3, a refusal or Escape
    included. If it fails, the tooltip says "The order list was left on
-   <year>; reload the page". After a 429 it waits 45 s first (`BUSY_WAIT`,
+   <year>; pick Last 30 Days again", naming the range and any search from
+   step 1, since a reload would only show the year again. After a 429 it waits 45 s first (`BUSY_WAIT`,
    the word saying so), since TCGplayer has just asked to slow down. After
    a challenge it sends nothing, since anything sent meets the same check:
-   the tooltip says to reload, pass the check, and pick the range again.
+   the tooltip says to reload, pass the check, and pick that range again.
 
 A year with no orders is an empty result, said on the tooltip, and no file.
 A refused or stopped walk writes nothing.

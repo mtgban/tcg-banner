@@ -144,7 +144,7 @@ describe("Download CSV", () => {
     p.choose("2016");
     p.button("Download CSV").click();
     await p.idle();
-    expect(p.tip()).toBe("No orders were placed in 2016\nThe order list was left on 2016; reload the page");
+    expect(p.tip()).toBe("No orders were placed in 2016\nThe order list was left on 2016; pick Last 30 Days again");
   });
 
   test("a refused walk saves nothing, with the reason on the tooltip", async () => {
