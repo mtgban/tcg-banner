@@ -222,5 +222,12 @@
     "find": "return { id: order.id, date: order.date || null,",
     "replace": "return { id: order.id,",
     "expectFailing": "an order that did not read whole still searches in its year"
+  },
+  {
+    "guard": "refunded tax is scaled by tax over Total, not over Subtotal",
+    "file": "src/csv.js",
+    "find": "(o.refunded * o.summary.tax) / o.summary.total",
+    "replace": "(o.refunded * o.summary.tax) / o.summary.subtotal",
+    "expectFailing": "is the whole tax for a full refund"
   }
 ]

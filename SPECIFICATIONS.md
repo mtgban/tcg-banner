@@ -234,9 +234,20 @@ history file shares, under the same names and meaning:
 | `Quantity`, `Subtotal`, `Shipping`, `Sales Tax` | the summary |
 | `Refunded` | the refunds' sum as a negative amount, `-$1.02`, or empty |
 | `Total` | `Total:` with the refunds taken off, the same as `Amount` |
+| `Refunded Tax` | the part of `Refunded` that was tax, as a negative amount, or empty without a refund; see below |
 
 The money reads left to right as a sum: `Subtotal`, `Shipping`, `Sales Tax`
-and `Refunded` come to `Total`.
+and `Refunded` come to `Total`. `Refunded Tax` comes after, being part of
+`Refunded` rather than added to it.
+
+A refund note gives one amount and never says how much of it was tax, so
+`Refunded Tax` is the refunds scaled by the order's own share of tax,
+`Sales Tax` over `Total:`, rounded to the cent. It is exact for a full
+refund, where it is the whole tax, and an estimate for any other. The saved
+page's $1.02 partial refund, on a $215.06 New York order with $17.52 of
+tax, comes to $0.08: a $0.94 card and its tax. The same order also holds a
+$1.02 card, so the refund could equally have been that card with no tax;
+the note alone cannot tell them apart.
 
 **`tcg-order-<number>.csv`**, saved from the panel on one order (section 7),
 one row per line of it, every line included: the columns of section 6, then
