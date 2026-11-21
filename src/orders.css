@@ -1,9 +1,11 @@
-/* The panel's row: a year, then Download CSV taking the rest. The
-   select is a fixed width so the buttons never move as the year changes. */
+/* The panel's row: a range, then Download CSV taking the rest. The select
+   is a fixed width so the button never moves as the range changes: 92px
+   holds "120 days" and its arrow, and leaves the button 122px of the 109px
+   it needs. */
 
 #tcg-banner .tcg-banner-year {
   flex: none;
-  width: 72px;
+  width: 92px;
   margin: 0;
   padding: 6px 6px;
   border: 0;

@@ -17,7 +17,7 @@ beforeEach(() => {
 // file, would be asking it instead of fetch.
 afterEach(restore);
 
-const walk = (year, hooks = {}) => TCGB.walkYear(year, hooks);
+const walk = (year, hooks = {}) => TCGB.walkRange(year, hooks);
 
 describe("a year", () => {
   test("sets the year, reads every page, and puts the range back", async () => {
@@ -51,6 +51,16 @@ describe("a year", () => {
     const result = await walk("2016");
     expect(result.orders).toEqual([]);
     expect(result.pages).toBe(1);
+  });
+
+  test("walks the last days as it walks a year, without the year's date check", async () => {
+    // The fixture's orders are from 2026; Last 120 Days is checked by its
+    // heading and counts, not by each order's date.
+    const s = on(site({ totals: { "Last 120 Days": 12 } }));
+    const result = await walk("Last 120 Days");
+    expect(result.orders.length).toBe(12);
+    expect(s.asked[1]).toBe("POST Last 120 Days||true");
+    expect(s.state).toEqual({ range: "Last 30 Days", search: "" });
   });
 
   test("a year TCGplayer does not list is refused before anything is set", async () => {

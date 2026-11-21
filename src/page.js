@@ -1,6 +1,7 @@
 // The content script on TCGplayer's order history: every order number made
 // a control that searches for it, a Send to BAN beside each order whose
-// cards can be sent, and the panel. The panel saves a year as CSV, or, on a
+// cards can be sent, and the panel. The panel saves a year, or the last 30,
+// 90 or 120 days, as CSV, or, on a
 // list a search has narrowed to one order, that order's cards, which it
 // can also send to BAN.
 
@@ -257,29 +258,50 @@ globalThis.TCGB = globalThis.TCGB || {};
     }).disabled = !cards.lines.length;
   }
 
-  // ---- A year: walked, every order of it in one file ----
+  // ---- A range: walked, every order of it in one file ----
 
-  function yearPanel() {
-    panel.hint("Save a year's orders as CSV");
+  // isYear tells a year from one of TCGplayer's relative ranges.
+  function isYear(range) {
+    return /^\d{4}$/.test(range);
+  }
 
+  // fileName names a range's file. A relative range's carries the day it
+  // was read, since the same range holds other orders tomorrow.
+  function fileName(range) {
+    if (isYear(range)) {
+      return "tcg-orders-" + range + ".csv";
+    }
+    var d = new Date();
+    var day = [d.getFullYear(), d.getMonth() + 1, d.getDate()]
+      .map(function (n) {
+        return String(n).padStart(2, "0");
+      })
+      .join("-");
+    return "tcg-orders-" + range.toLowerCase().replace(/ /g, "-") + "-" + day + ".csv";
+  }
+
+  function rangePanel() {
+    panel.hint("Save a range of orders as CSV");
+
+    // TCGplayer's own ranges in its own order: the relative ones, then the
+    // years. "Last 120 Days" is shown as "120 days" to fit the box.
     var year = document.createElement("select");
     year.className = "tcg-banner-year";
-    year.setAttribute("aria-label", "Year");
-    for (var y = 0; y < filter.years.length; y++) {
+    year.setAttribute("aria-label", "Range");
+    for (var y = 0; y < filter.ranges.length; y++) {
       var option = document.createElement("option");
-      option.value = option.textContent = filter.years[y];
+      option.value = filter.ranges[y];
+      option.textContent = filter.ranges[y].replace(/^Last (\d+) Days$/, "$1 days");
       year.appendChild(option);
     }
-    if (filter.years.indexOf(filter.range) >= 0) {
-      year.value = filter.range;
-    }
+    year.value = filter.range;
     panel.actions.appendChild(year);
     goButton("Download CSV", function () {
       save();
     });
 
-    // Walks done on this page, by year, so asking for a year again costs
-    // no second walk.
+    // Years walked on this page, so asking for one again costs no second
+    // walk. Not a relative range, which moves on as the days do.
     var walked = {};
     var stopped = false;
 
@@ -292,11 +314,11 @@ globalThis.TCGB = globalThis.TCGB || {};
     });
 
     function write(chosen, result) {
-      var name = "tcg-orders-" + chosen + ".csv";
+      var name = fileName(chosen);
       var restore = result.restore ? [result.restore] : [];
       if (!result.orders.length) {
         panel.word("no orders");
-        panel.fail(["No orders were placed in " + chosen + (result.pending ? " that have shipped" : "")].concat(restore, spoken()).join("\n"));
+        panel.fail(["No orders were placed in " + TCGB.placedIn(chosen) + (result.pending ? " that have shipped" : "")].concat(restore, spoken()).join("\n"));
         return;
       }
       TCGB.download(TCGB.ordersCSV(result.orders), name);
@@ -326,7 +348,7 @@ globalThis.TCGB = globalThis.TCGB || {};
       stopped = false;
       panel.clear();
       panel.busy(true);
-      TCGB.walkYear(chosen, {
+      TCGB.walkRange(chosen, {
         step: function (n, of) {
           panel.word("page " + n + (of ? " of " + of : ""));
         },
@@ -339,7 +361,9 @@ globalThis.TCGB = globalThis.TCGB || {};
       }).then(
         function (result) {
           panel.busy(false);
-          walked[chosen] = result;
+          if (isYear(chosen)) {
+            walked[chosen] = result;
+          }
           write(chosen, result);
         },
         function (err) {
@@ -355,7 +379,7 @@ globalThis.TCGB = globalThis.TCGB || {};
   if (one) {
     orderPanel(one);
   } else {
-    yearPanel();
+    rangePanel();
   }
   idle();
 

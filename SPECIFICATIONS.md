@@ -170,10 +170,13 @@ relative one moves on: an order of July 21, 2026, searched from Last 90 Days
 in November, matches nothing. An order whose year the dropdown does not
 offer, or whose date did not read, keeps the range selected.
 
-## 4. The year walk
+## 4. The walk
 
-The panel offers the years `#DateRange` lists. *Download CSV* walks the
-chosen year:
+The panel offers every range `#DateRange` lists, in its order: the last 30,
+90 and 120 days (shown as `30 days` and so on, to fit), then the years. It
+starts on the range the page shows. *Download CSV* walks the chosen range,
+here called the year, since a relative range is walked the same way but
+for one check, the date's, in step 3:
 
 1. **Read the state fresh**: GET page 1 and take the range and search the
    session holds, and the token, from it.
@@ -183,7 +186,9 @@ chosen year:
    size and N, and N must equal `pageLast` (or be 1 with no pager). Every
    page must have the year selected and no search, a heading naming the year,
    its own slice of the same total, exactly that many orders, none seen
-   before, every one read whole and dated in the year. Anything else refuses
+   before, every one read whole and, for a year, dated in it. A relative
+   range has no date check: where TCGplayer puts its day boundary is not
+   known, so it rests on the heading and the counts. Anything else refuses
    the walk: the list moved (another tab changed the range), or an order
    could not be read, named by its number.
 4. **Put back** the range and search from step 1 (`ClearSessionFilters`
@@ -207,8 +212,9 @@ A tab closed mid-walk leaves the session on the year, visible in the page's
 own dropdown. That is the one side effect, and the same POST the dropdown
 makes.
 
-A finished walk is kept for the page's life, so asking for the same year
-again costs no second walk.
+A finished year is kept for the page's life, so asking for it again costs
+no second walk. A relative range is walked each time, since it moves on
+as the days do.
 
 ## 5. The CSVs
 
@@ -219,7 +225,9 @@ leading `'` when it starts with `=`, `+`, `-`, `@`, a tab or a CR, which a
 spreadsheet would run as a formula; a seller names their own store. The
 cards file of section 6 goes to mtgban alone and is written as read.
 
-**`tcg-orders-<year>.csv`**, one row per order, in TCGplayer's order. The
+**`tcg-orders-<year>.csv`**, or `tcg-orders-last-30-days-<yyyy-mm-dd>.csv`
+for a relative range, dated the day it was read, one row per order, in
+TCGplayer's order. The
 first three are the columns go-mtgban's `tcgHistory` wrote and ck-banner's
 history file shares, under the same names and meaning:
 
@@ -317,7 +325,7 @@ lands in whichever mode, uploader or buylist, the reader last used.
 ## 7. The panel
 
 ck-banner's panel: the stroopwafel and "TCG BANner", one word, a mark, a
-drawn tooltip, one row (the year, *Download CSV*). Until it is asked for
+drawn tooltip, one row (the range, *Download CSV*). Until it is asked for
 something, and again when the year changes, the word is `ready` with a
 tick, and with no word the heading drops its dash. On a list a search has
 narrowed to one order (a search is set, the heading counts one order, and
