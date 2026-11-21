@@ -194,5 +194,12 @@
     "find": "}).disabled = !cards.lines.length;",
     "replace": "}).disabled = false;",
     "expectFailing": "an order with nothing BAN reads still saves, and its Send to BAN is off"
+  },
+  {
+    "guard": "the dash is hidden until there is a word",
+    "file": "src/ui.js",
+    "find": "<span class=\"tcg-banner-sep\" hidden>",
+    "replace": "<span class=\"tcg-banner-sep\">",
+    "expectFailing": "is ready, with a tick and no dangling dash, until asked for something"
   }
 ]

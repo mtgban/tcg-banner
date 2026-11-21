@@ -17,6 +17,28 @@ describe("the panel", () => {
     expect(p.titled()).toBe(0);
   });
 
+  test("is ready, with a tick and no dangling dash, until asked for something", () => {
+    const p = mount();
+    expect(p.word()).toBe("ready");
+    expect(p.done()).toBe(true);
+    expect(p.panel.querySelector(".tcg-banner-sep").hidden).toBe(false);
+    expect(p.tip()).toBe("Save a year's orders as CSV");
+    expect(p.panel.querySelector(".tcg-banner-label").textContent).toBe("TCG BANner - ready✓");
+    // A panel given no word shows no dash either.
+    expect(p.window.TCGB.panel().root.querySelector(".tcg-banner-sep").hidden).toBe(true);
+  });
+
+  test("is ready again once another year is chosen", async () => {
+    const p = mount({ totals: { 2025: 23 } });
+    p.choose("2025");
+    p.button("Download CSV").click();
+    await p.idle();
+    p.choose("2024");
+    expect(p.word()).toBe("ready");
+    expect(p.done()).toBe(true);
+    expect(p.tip()).toBe("Save a year's orders as CSV");
+  });
+
   test("picks the year the page already shows", () => {
     const p = mount({ range: "2024" });
     expect(p.year().value).toBe("2024");
@@ -130,6 +152,7 @@ describe("one order", () => {
 
   test("the panel offers its cards, as a file or to BAN, and no year", () => {
     const p = one();
+    expect(p.word()).toBe("ready");
     expect(p.year()).toBe(null);
     expect([...p.panel.querySelectorAll(".tcg-banner-go")].map((b) => b.textContent)).toEqual(["Download CSV", "Send to BAN"]);
     expect(p.tip()).toBe("Save the cards of " + ONE + " as CSV, or send them to BAN");

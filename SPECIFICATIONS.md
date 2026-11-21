@@ -295,7 +295,9 @@ lands in whichever mode, uploader or buylist, the reader last used.
 ## 7. The panel
 
 ck-banner's panel: the stroopwafel and "TCG BANner", one word, a mark, a
-drawn tooltip, one row (the year, *Download CSV*). On a list a search has
+drawn tooltip, one row (the year, *Download CSV*). Until it is asked for
+something, and again when the year changes, the word is `ready` with a
+tick, and with no word the heading drops its dash. On a list a search has
 narrowed to one order (a search is set, the heading counts one order, and
 that order is read whole), the row is that order's instead: *Download CSV*
 saves its cards with no request, and *Send to BAN* does what the icon beside
