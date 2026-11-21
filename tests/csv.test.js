@@ -12,7 +12,7 @@ function rowsOf(csv) {
 describe("the orders file", () => {
   test("starts with the columns go-mtgban's tool and ck-banner share", () => {
     expect(header(TCGB.ordersCSV(orders()))).toBe(
-      "Order ID,Order Date,Amount,Kind,Seller,Tax State,Quantity,Subtotal,Shipping,Sales Tax,Refunded,Total"
+      "Order ID,Order Date,Amount,Kind,Seller,Tax State,Quantity,Subtotal,Shipping,Sales Tax,Refunded,Total,Refunded Tax"
     );
   });
 
@@ -32,6 +32,35 @@ describe("the orders file", () => {
     expect(at(row, "Refunded")).toBe("-" + TCGB.dollars(refunded.refunded));
     expect(at(row, "Total")).toBe(TCGB.dollars(refunded.summary.total - refunded.refunded));
     expect(at(rows.find((r) => r[0] !== refunded.id), "Refunded")).toBe("");
+  });
+});
+
+describe("the refunded tax", () => {
+  const taxOf = (summary, refunded) => {
+    const [order] = orders();
+    Object.assign(order.summary, summary);
+    order.refunded = refunded;
+    order.amount = order.summary.total - refunded;
+    const [head, row] = rowsOf(TCGB.ordersCSV([order]));
+    return row[head.indexOf("Refunded Tax")];
+  };
+
+  test("is the refund scaled by the order's tax over its Total", () => {
+    // The saved page's partial refund: $1.02 off a $215.06 New York order
+    // carrying $17.52 of tax, read as a $0.94 card and its $0.08 tax.
+    expect(taxOf({ subtotal: 19754, shipping: 0, tax: 1752, total: 21506 }, 102)).toBe("-$0.08");
+  });
+
+  test("is the whole tax for a full refund", () => {
+    expect(taxOf({ subtotal: 700, shipping: 0, tax: 63, total: 763 }, 763)).toBe("-$0.63");
+  });
+
+  test("is nothing for an order without tax, and empty without a refund", () => {
+    expect(taxOf({ subtotal: 700, shipping: 0, tax: 0, total: 700 }, 100)).toBe("$0.00");
+    // The last column, empty: the row ends on its comma.
+    const [order] = orders();
+    order.refunded = 0;
+    expect(TCGB.ordersCSV([order]).split("\n")[1]).toEndWith(",");
   });
 });
 

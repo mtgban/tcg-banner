@@ -44,11 +44,20 @@ globalThis.TCGB = globalThis.TCGB || {};
     return named.join(" ");
   }
 
+  // refundedTax is the tax share of an order's refunds, in cents: the
+  // refunds scaled by the order's tax over its Total. A refund note gives one
+  // amount and never says how much of it was tax, so this is exact for a full
+  // refund and an estimate for any other.
+  function refundedTax(o) {
+    return o.summary.total ? Math.round((o.refunded * o.summary.tax) / o.summary.total) : 0;
+  }
+
   // One row per order. The first three are the columns go-mtgban's
   // tcgHistory wrote and ck-banner's history file shares, under the same
   // names and meaning the same thing; Amount is what was paid, net of
   // refunds. The money then reads left to right as a sum: Subtotal,
   // Shipping, Sales Tax and the refunds, as a negative, come to Total.
+  // Refunded Tax, after it, is the part of Refunded that was tax.
   var ORDERS = [
     ["Order ID", function (o) { return o.id; }],
     ["Order Date", function (o) { return o.dateText; }],
@@ -62,6 +71,7 @@ globalThis.TCGB = globalThis.TCGB || {};
     ["Sales Tax", function (o) { return TCGB.dollars(o.summary.tax); }],
     ["Refunded", function (o) { return o.refunded ? TCGB.dollars(-o.refunded) : ""; }],
     ["Total", function (o) { return TCGB.dollars(o.amount); }],
+    ["Refunded Tax", function (o) { return o.refunded ? TCGB.dollars(-refundedTax(o)) : ""; }],
   ];
 
   // The columns mtgban's uploader reads, each traced through docparse's
