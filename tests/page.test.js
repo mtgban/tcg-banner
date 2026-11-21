@@ -108,6 +108,14 @@ describe("Download CSV", () => {
     expect(p.tip()).toBe("No orders were placed in 2016");
   });
 
+  test("a year with no orders still says when the range could not be put back", async () => {
+    const p = mount({ totals: { 2016: 0 }, failPost: (range) => range === "Last 30 Days" });
+    p.choose("2016");
+    p.button("Download CSV").click();
+    await p.idle();
+    expect(p.tip()).toBe("No orders were placed in 2016\nThe order list was left on 2016; reload the page");
+  });
+
   test("a refused walk saves nothing, with the reason on the tooltip", async () => {
     const p = mount({
       totals: { 2025: 23 },
