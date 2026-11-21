@@ -1,0 +1,13 @@
+{
+  "name": "tcg-banner",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Export a TCGplayer order history as CSV, search an order by its number, and send an order to BAN",
+  "scripts": {
+    "test": "bun test tests/",
+    "mutate": "bun scripts/mutate.mjs"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.14.5"
+  }
+}
