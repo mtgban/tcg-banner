@@ -5,10 +5,11 @@
 
 - **Saves a year as CSV.** Pick a year and click *Download CSV* for one row
   per order: `Order ID`, `Order Date`, `Amount` net of refunds, then seller,
-  quantity, subtotal, shipping, tax, the refund as a negative amount, and the
-  total net of it. You do not have to set the page's date range first: the extension selects
-  the year itself, reads every page, checks each one is still that year, and
-  puts your range and search back when it is done.
+  the state the sales tax names, quantity, subtotal, shipping, tax, the
+  refund as a negative amount, and the total net of it. You do not have to
+  set the page's date range first: the extension selects the year itself,
+  reads every page, checks each one is still that year, and puts your range
+  and search back when it is done.
 - **Makes every order number a link.** Clicking `17B3D927-60B89F-0DA62` runs
   TCGplayer's own search for it and shows you that order alone. There the
   panel is that order's: *Download CSV* saves its cards, one row per line,

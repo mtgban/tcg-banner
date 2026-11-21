@@ -226,6 +226,7 @@ history file shares, under the same names and meaning:
 | `Amount` | `Total:` minus every refund, `$23.13` |
 | `Kind` | `Seller` or `Direct` |
 | `Seller` | the seller, or `TCGplayer Direct` |
+| `Tax State` | the state a `Sales Tax (NY)` row names, `NY`; empty for a plain `Sales Tax`, for Canada's `CA GST`, or for no tax row |
 | `Quantity`, `Subtotal`, `Shipping`, `Sales Tax` | the summary |
 | `Refunded` | the refunds' sum as a negative amount, `-$1.02`, or empty |
 | `Total` | `Total:` with the refunds taken off, the same as `Amount` |
