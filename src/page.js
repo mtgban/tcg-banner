@@ -78,13 +78,15 @@ globalThis.TCGB = globalThis.TCGB || {};
     var unread = 0;
     for (var i = 0; i < order.lines.length; i++) {
       var l = order.lines[i];
-      if (!TCGB.handoffURL(l.game)) {
+      // A line not read whole first: a custom listing links to no product,
+      // so it names no game either, and is not another game's card.
+      if (l.problem) {
+        unread++;
+      } else if (!TCGB.handoffURL(l.game)) {
         other++;
       } else if (l.sealed) {
         // Until mtgban's uploader is known to resolve a sealed product id.
         sealed++;
-      } else if (l.problem) {
-        unread++;
       } else if (l.language !== "English") {
         // mtgban's uploader reads no language: the product id would price
         // the English printing.

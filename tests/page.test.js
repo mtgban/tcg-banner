@@ -408,6 +408,20 @@ describe("Send to BAN", () => {
     expect(p.tip()).toContain("does not say which cards it covers");
   });
 
+  test("a custom listing is counted as not read whole, not as another game", () => {
+    const p = mount({
+      change: (html) =>
+        html
+          .replace("https://tcgplayer-cdn.tcgplayer.com/product/4842_25w.jpg", "https://tcgplayer-cdn.tcgplayer.com/product/0_25w.jpg")
+          .replace("https://store.tcgplayer.com/magic/ice-age/portent", "https://store.tcgplayer.com/listing?q=Portent"),
+    });
+    p.document.querySelector(".orderWrap button.tcg-banner-send").click();
+    p.ready();
+    expect(p.tabs[0].posted[0].data.rows).toBe(2);
+    expect(p.tip()).toContain("1 line not read whole, not sent");
+    expect(p.tip()).not.toContain("another game");
+  });
+
   test("lines of another game are left out and counted", () => {
     const p = mount({
       change: (html) => html.replace("https://store.tcgplayer.com/magic/ice-age/portent", "https://store.tcgplayer.com/pokemon/base-set/portent"),
