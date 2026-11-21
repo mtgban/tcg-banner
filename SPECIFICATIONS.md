@@ -80,8 +80,9 @@ label refuses the order:
 
 The number is a bare text node after the label's `<br>`; a number of
 another shape refuses the order. A seller order names its seller in
-`[data-aid=spn-sellerorderwidget-vendorname] a`; a Direct order names a
-seller on each line (`.orderSoldby a`).
+`[data-aid=spn-sellerorderwidget-vendorname] a`, except an order TCGplayer
+sold itself (`TCGPLAYER-...`), whose span holds the plain text `TCGplayer`
+and no link; a Direct order names a seller on each line (`.orderSoldby a`).
 
 The summary, `table[data-aid=tbl-sellerorderwidget-productsinorder]`, is
 read by label: `Quantity:`, `Subtotal:`, `Shipping:`, `Total:`, and

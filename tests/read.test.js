@@ -212,8 +212,19 @@ describe("an order", () => {
     const wrap = [...doc.querySelectorAll(".orderWrap")].find((w) => /Order Number/.test(w.querySelector(".orderHeader").textContent));
     const title = [...wrap.querySelectorAll(".orderHeader .orderTitle")].find((t) => /Order Number/.test(t.textContent));
     title.parentNode.lastChild.textContent = " TCGPLAYER-682806-7F98E ";
+    // TCGplayer names itself in plain text, with no feedback link (live,
+    // 2026-11-21, on six orders from 2023 and 2024).
+    const vendor = wrap.querySelector('[data-aid="spn-sellerorderwidget-vendorname"]');
+    vendor.innerHTML = " TCGplayer<br> ";
     const o = TCGB.readOrder(wrap);
-    expect([o.error, o.kind, o.id]).toEqual(["", "Seller", "TCGPLAYER-682806-7F98E"]);
+    expect([o.error, o.kind, o.id, o.seller]).toEqual(["", "Seller", "TCGPLAYER-682806-7F98E", "TCGplayer"]);
+    // Plain text names no other seller: that would be a guess.
+    title.parentNode.lastChild.textContent = " A0000007-100007-10007 ";
+    expect(TCGB.readOrder(wrap).error).toBe("a seller order with no seller");
+    title.parentNode.lastChild.textContent = " TCGPLAYER-682806-7F98E ";
+    vendor.innerHTML = " Someone Else<br> ";
+    expect(TCGB.readOrder(wrap).error).toBe("a seller order with no seller");
+    vendor.innerHTML = '<a class="nocontext" href="https://store.tcgplayer.com/sellerfeedback/33636">Seller 1</a><br>';
     title.parentNode.lastChild.textContent = " 33636-744618-D7765 ";
     expect(TCGB.readOrder(wrap).id).toBe("33636-744618-D7765");
   });
