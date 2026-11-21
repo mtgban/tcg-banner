@@ -390,7 +390,7 @@ globalThis.TCGB = globalThis.TCGB || {};
       readSeller(order, wrap);
       addsUp(order);
     } catch (err) {
-      return { id: order.id, wrap: wrap, numberNode: order.numberNode || null, error: err.message };
+      return { id: order.id, date: order.date || null, wrap: wrap, numberNode: order.numberNode || null, error: err.message };
     }
     order.amount = order.summary.total - order.refunded;
     order.error = "";

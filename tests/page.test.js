@@ -222,9 +222,36 @@ describe("the order number", () => {
         __RequestVerificationToken: "TOKEN",
         ClearSessionFilters: "False",
         SearchString: seller.textContent,
-        DateRange: "Last 30 Days",
+        DateRange: "2026",
       },
     ]);
+  });
+
+  test("searches within the order's own year, not a relative range", () => {
+    // In Last 90 Days, an order from July is out of range by November.
+    const p = mount({ range: "Last 90 Days", change: (html) => html.replace("November 20, 2026", "July 21, 2025") });
+    const first = p.document.querySelector("button.tcg-banner-order");
+    first.click();
+    expect(p.submitted[0].SearchString).toBe(first.textContent);
+    expect(p.submitted[0].DateRange).toBe("2025");
+    expect(p.submitted[0].ClearSessionFilters).toBe("False");
+  });
+
+  test("an order that did not read whole still searches in its year", () => {
+    const p = mount({
+      range: "Last 90 Days",
+      change: (html) => html.replace("November 20, 2026", "July 21, 2025").replace("Subtotal:", "Discount:"),
+    });
+    const first = p.document.querySelector(".orderWrap");
+    expect(first.querySelectorAll("button.tcg-banner-send").length).toBe(0);
+    first.querySelector("button.tcg-banner-order").click();
+    expect(p.submitted[0].DateRange).toBe("2025");
+  });
+
+  test("an order dated in a year the dropdown does not offer keeps the range", () => {
+    const p = mount({ change: (html) => html.replace("November 20, 2026", "July 21, 2015") });
+    p.document.querySelector("button.tcg-banner-order").click();
+    expect(p.submitted[0].DateRange).toBe("Last 30 Days");
   });
 
   test("a Direct order searches the same way", () => {

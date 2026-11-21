@@ -208,5 +208,19 @@
     "find": "/^Sales Tax \\(([A-Z]{2})\\)$/.exec(",
     "replace": "/([A-Z]{2})/.exec(",
     "expectFailing": "is empty where no row names one"
+  },
+  {
+    "guard": "an order number is searched in the order's own year",
+    "file": "src/page.js",
+    "find": "      range.value = year;\n",
+    "replace": "",
+    "expectFailing": "searches within the order's own year, not a relative range"
+  },
+  {
+    "guard": "an unreadable order keeps its date",
+    "file": "src/read.js",
+    "find": "return { id: order.id, date: order.date || null,",
+    "replace": "return { id: order.id,",
+    "expectFailing": "an order that did not read whole still searches in its year"
   }
 ]

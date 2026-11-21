@@ -162,9 +162,13 @@ Each order number becomes a `<button>` styled as a link. A click sets the
 page's own `#SearchString` to the number (`.value` only: the box carries
 jQuery autocomplete, and a key event would wake it) and submits the page's
 own form with its own Search button, `form.requestSubmit(button)`. That is
-exactly what typing the number and pressing Search does: the token,
-`ClearSessionFilters=False`, the number, and the range already selected. A
-clicked order is on the page, so it is inside that range.
+what typing the number and pressing Search does: the token,
+`ClearSessionFilters=False`, the number, and the range. The range is the
+order's own year, set as `#DateRange`'s `.value` (its `onchange` would post
+the range and reload first), since a search is scoped by the range and a
+relative one moves on: an order of July 21, 2026, searched from Last 90 Days
+in November, matches nothing. An order whose year the dropdown does not
+offer, or whose date did not read, keeps the range selected.
 
 ## 4. The year walk
 
