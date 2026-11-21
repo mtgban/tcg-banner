@@ -29,15 +29,24 @@ globalThis.TCGB = globalThis.TCGB || {};
 
   // ---- The order number searches for itself ----
 
-  // search does what typing the number and pressing Search does: the page's
-  // own form, its own button, the range already selected. A clicked order is
-  // on the page, so it is inside that range.
-  function search(number) {
+  // search does what typing the number and pressing Search does, with the
+  // page's own form and button, but within the order's own year: a search
+  // is scoped by the range, and a relative one like Last 90 Days moves on
+  // while the order stays put. An order whose year is not offered, or whose
+  // date did not read, keeps the range selected.
+  function search(order) {
     var box = filter.form.querySelector("input#SearchString");
+    var range = filter.form.querySelector("select#DateRange");
     var button = filter.form.querySelector('input[type="submit"]');
+    var year = order.date ? String(order.date.year) : "";
+    if (filter.years.indexOf(year) >= 0) {
+      // .value alone, as for the box: the dropdown's own change handler
+      // would post the range and reload before the search went.
+      range.value = year;
+    }
     // .value alone: the box carries jQuery's autocomplete, which a key
     // event would wake.
-    box.value = number;
+    box.value = order.id;
     filter.form.requestSubmit(button);
   }
 
@@ -47,7 +56,7 @@ globalThis.TCGB = globalThis.TCGB || {};
     button.className = "tcg-banner-order";
     button.textContent = order.id;
     button.addEventListener("click", function () {
-      search(order.id);
+      search(order);
     });
     // The number and its Send to BAN keep to one line: the header's column
     // is just wide enough for a seller order's number alone.
