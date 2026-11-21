@@ -36,20 +36,8 @@
   text-align: left;
 }
 
-#tcg-banner[hidden] {
-  display: none;
-}
-
 #tcg-banner .tcg-banner-label {
   font-weight: 500;
-}
-
-#tcg-banner .tcg-banner-label.tcg-banner-jumps {
-  cursor: pointer;
-}
-
-#tcg-banner .tcg-banner-label.tcg-banner-jumps:hover .tcg-banner-word {
-  text-decoration: underline;
 }
 
 #tcg-banner .tcg-banner-label:focus-visible {
