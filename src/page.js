@@ -185,6 +185,14 @@ globalThis.TCGB = globalThis.TCGB || {};
 
   var panel = TCGB.panel();
 
+  // idle is the panel with nothing done yet, or nothing done since the
+  // choice changed.
+  function idle() {
+    panel.clear();
+    panel.word("ready");
+    panel.mark("done");
+  }
+
   // single is the order a search has narrowed the list to, read whole, or
   // null: the panel then offers that order rather than a year.
   function single() {
@@ -259,10 +267,7 @@ globalThis.TCGB = globalThis.TCGB || {};
     var walked = {};
     var stopped = false;
 
-    year.addEventListener("change", function () {
-      panel.word("");
-      panel.clear();
-    });
+    year.addEventListener("change", idle);
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape" && panel.working()) {
@@ -333,6 +338,7 @@ globalThis.TCGB = globalThis.TCGB || {};
   } else {
     yearPanel();
   }
+  idle();
 
   document.body.appendChild(panel.root);
 })(globalThis.TCGB);

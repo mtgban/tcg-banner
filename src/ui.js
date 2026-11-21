@@ -23,7 +23,7 @@ globalThis.TCGB = globalThis.TCGB || {};
     root.id = "tcg-banner";
     root.innerHTML =
       '<div class="tcg-banner-label" tabindex="0" aria-describedby="tcg-banner-tip">' +
-      'TCG BAN<i class="tcg-banner-ner">ner</i><span class="tcg-banner-sep"> - </span>' +
+      'TCG BAN<i class="tcg-banner-ner">ner</i><span class="tcg-banner-sep" hidden> - </span>' +
       '<span class="tcg-banner-spin" aria-hidden="true"></span>' +
       '<b class="tcg-banner-word"></b>' +
       '<span class="tcg-banner-mark" aria-hidden="true" hidden></span>' +
