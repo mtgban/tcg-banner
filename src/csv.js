@@ -55,9 +55,9 @@ globalThis.TCGB = globalThis.TCGB || {};
   // One row per order. The first three are the columns go-mtgban's
   // tcgHistory wrote and ck-banner's history file shares, under the same
   // names and meaning the same thing; Amount is what was paid, net of
-  // refunds. The money then reads left to right as a sum: Subtotal,
-  // Shipping, Sales Tax and the refunds, as a negative, come to Total.
-  // Refunded Tax, after it, is the part of Refunded that was tax.
+  // refunds. Subtotal, Shipping, Sales Tax and Refund, a negative, add up
+  // to Total. Tax Refund (est.) is the part of Refund that was tax, beside
+  // it, and Total Tax is Sales Tax net of it.
   var ORDERS = [
     ["Order ID", function (o) { return o.id; }],
     ["Order Date", function (o) { return o.dateText; }],
@@ -69,9 +69,10 @@ globalThis.TCGB = globalThis.TCGB || {};
     ["Subtotal", function (o) { return TCGB.dollars(o.summary.subtotal); }],
     ["Shipping", function (o) { return TCGB.dollars(o.summary.shipping); }],
     ["Sales Tax", function (o) { return TCGB.dollars(o.summary.tax); }],
-    ["Refunded", function (o) { return o.refunded ? TCGB.dollars(-o.refunded) : ""; }],
+    ["Refund", function (o) { return o.refunded ? TCGB.dollars(-o.refunded) : ""; }],
+    ["Tax Refund (est.)", function (o) { return o.refunded ? TCGB.dollars(-refundedTax(o)) : ""; }],
     ["Total", function (o) { return TCGB.dollars(o.amount); }],
-    ["Refunded Tax", function (o) { return o.refunded ? TCGB.dollars(-refundedTax(o)) : ""; }],
+    ["Total Tax", function (o) { return TCGB.dollars(o.summary.tax - refundedTax(o)); }],
   ];
 
   // The columns mtgban's uploader reads, each traced through docparse's
