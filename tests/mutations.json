@@ -243,5 +243,12 @@
     "find": ".concat(restore, spoken()).join(\"\\n\"));\n        return;",
     "replace": ".concat(spoken()).join(\"\\n\"));\n        return;",
     "expectFailing": "a year with no orders still says when the range could not be put back"
+  },
+  {
+    "guard": "a line not read whole is counted before its game",
+    "file": "src/page.js",
+    "find": "      if (l.problem) {\n        unread++;\n      } else if (!TCGB.handoffURL(l.game)) {",
+    "replace": "      if (false) {\n        unread++;\n      } else if (!TCGB.handoffURL(l.game)) {",
+    "expectFailing": "a custom listing is counted as not read whole, not as another game"
   }
 ]
