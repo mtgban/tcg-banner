@@ -285,17 +285,30 @@ describe("Send to BAN", () => {
     expect(p.tabs[0].posted).toEqual([]);
   });
 
-  test("waits while a walk runs, which owns the panel", async () => {
+  test("goes out while a walk runs, which keeps the panel", async () => {
     const p = mount({ totals: { 2025: 23 } });
     p.choose("2025");
     p.button("Download CSV").click();
     const send = p.document.querySelector("button.tcg-banner-send");
-    expect(send.disabled).toBe(true);
-    send.click();
-    expect(p.tabs).toEqual([]);
-    await p.idle();
     expect(send.disabled).toBe(false);
+    send.click();
+    expect(p.tabs.map((t) => t.url)).toEqual(["https://mtgban.com/upload/handoff"]);
+    expect(p.busy()).toBe(true);
+    p.ready();
+    expect(p.tabs[0].posted.length).toBe(1);
+    await p.idle();
     expect(p.word()).toBe("23 orders");
+  });
+
+  test("a send blocked during a walk is said once the walk ends", async () => {
+    const p = mount({ totals: { 2025: 23 }, blockPopups: true });
+    p.choose("2025");
+    p.button("Download CSV").click();
+    p.document.querySelector("button.tcg-banner-send").click();
+    expect(p.failed()).toBe(false);
+    await p.idle();
+    expect(p.word()).toBe("23 orders");
+    expect(p.tip()).toBe("Saved tcg-orders-2025.csv from 3 pages\nSend to BAN: The upload page was blocked; use the CSV");
   });
 
   test("a send answered during a walk leaves the walk's panel alone", async () => {
