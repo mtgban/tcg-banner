@@ -1,4 +1,4 @@
-/* The panel's row: a year, then Orders and Items sharing the rest. The
+/* The panel's row: a year, then Download CSV taking the rest. The
    select is a fixed width so the buttons never move as the year changes. */
 
 #tcg-banner .tcg-banner-year {
