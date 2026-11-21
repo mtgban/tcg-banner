@@ -30,6 +30,20 @@ globalThis.TCGB = globalThis.TCGB || {};
     return lines.join("\n") + "\n";
   }
 
+  // taxState is the state an order's "Sales Tax (NY)" row names. A plain
+  // "Sales Tax" or Canada's "CA GST" names none. Should rows ever name two,
+  // both are given rather than one picked.
+  function taxState(o) {
+    var named = [];
+    for (var i = 0; i < o.summary.taxes.length; i++) {
+      var m = /^Sales Tax \(([A-Z]{2})\)$/.exec(o.summary.taxes[i]);
+      if (m && named.indexOf(m[1]) < 0) {
+        named.push(m[1]);
+      }
+    }
+    return named.join(" ");
+  }
+
   // One row per order. The first three are the columns go-mtgban's
   // tcgHistory wrote and ck-banner's history file shares, under the same
   // names and meaning the same thing; Amount is what was paid, net of
@@ -41,6 +55,7 @@ globalThis.TCGB = globalThis.TCGB || {};
     ["Amount", function (o) { return TCGB.dollars(o.amount); }],
     ["Kind", function (o) { return o.kind; }],
     ["Seller", function (o) { return text(o.seller); }],
+    ["Tax State", taxState],
     ["Quantity", function (o) { return o.summary.quantity; }],
     ["Subtotal", function (o) { return TCGB.dollars(o.summary.subtotal); }],
     ["Shipping", function (o) { return TCGB.dollars(o.summary.shipping); }],

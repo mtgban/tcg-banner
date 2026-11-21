@@ -201,5 +201,12 @@
     "find": "<span class=\"tcg-banner-sep\" hidden>",
     "replace": "<span class=\"tcg-banner-sep\">",
     "expectFailing": "is ready, with a tick and no dangling dash, until asked for something"
+  },
+  {
+    "guard": "only a Sales Tax row names a state",
+    "file": "src/csv.js",
+    "find": "/^Sales Tax \\(([A-Z]{2})\\)$/.exec(",
+    "replace": "/([A-Z]{2})/.exec(",
+    "expectFailing": "is empty where no row names one"
   }
 ]

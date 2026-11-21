@@ -12,7 +12,7 @@ function rowsOf(csv) {
 describe("the orders file", () => {
   test("starts with the columns go-mtgban's tool and ck-banner share", () => {
     expect(header(TCGB.ordersCSV(orders()))).toBe(
-      "Order ID,Order Date,Amount,Kind,Seller,Quantity,Subtotal,Shipping,Sales Tax,Refunded,Total"
+      "Order ID,Order Date,Amount,Kind,Seller,Tax State,Quantity,Subtotal,Shipping,Sales Tax,Refunded,Total"
     );
   });
 
@@ -32,6 +32,28 @@ describe("the orders file", () => {
     expect(at(row, "Refunded")).toBe("-" + TCGB.dollars(refunded.refunded));
     expect(at(row, "Total")).toBe(TCGB.dollars(refunded.summary.total - refunded.refunded));
     expect(at(rows.find((r) => r[0] !== refunded.id), "Refunded")).toBe("");
+  });
+});
+
+describe("the tax state", () => {
+  const stateOf = (taxes) => {
+    const [order] = orders();
+    order.summary.taxes = taxes;
+    const [head, row] = rowsOf(TCGB.ordersCSV([order]));
+    return row[head.indexOf("Tax State")];
+  };
+
+  test("is the state a Sales Tax row names", () => {
+    expect(stateOf(["Sales Tax (NY)"])).toBe("NY");
+    // The fixture's own rows, as cut from the saved page.
+    expect(rowsOf(TCGB.ordersCSV(orders())).slice(1).map((r) => r[5])).toContain("ZZ");
+  });
+
+  test("is empty where no row names one", () => {
+    expect(stateOf(["Sales Tax"])).toBe("");
+    // Canada's GST: CA is the country, not California.
+    expect(stateOf(["CA GST"])).toBe("");
+    expect(stateOf([])).toBe("");
   });
 });
 
