@@ -264,5 +264,33 @@
     "find": "    function onFocus() {\n      if (opened.closed) {",
     "replace": "    function onFocus() {\n      if (true) {",
     "expectFailing": "says it is sending until mtgban's page listens"
+  },
+  {
+    "guard": "a name only ending in mtgban.com is not mtgban",
+    "file": "src/handoff.js",
+    "find": "parsed.hostname.slice(-11) === \".mtgban.com\"",
+    "replace": "parsed.hostname.slice(-10) === \"mtgban.com\"",
+    "expectFailing": "is not a name that only ends in mtgban.com"
+  },
+  {
+    "guard": "mtgban is answered over https only",
+    "file": "src/handoff.js",
+    "find": "parsed.protocol === \"https:\" &&",
+    "replace": "",
+    "expectFailing": "is not one over plain http"
+  },
+  {
+    "guard": "only the ready message gets the cards",
+    "file": "src/handoff.js",
+    "find": "        event.data.type !== READY\n",
+    "replace": "        false\n",
+    "expectFailing": "a message of another type from the tab gets no cards"
+  },
+  {
+    "guard": "a tab closed before it listened gets no cards",
+    "file": "src/handoff.js",
+    "find": "      stopWaiting();\n      if (opened.closed) {\n        done(TCGB.CLOSED);",
+    "replace": "      stopWaiting();\n      if (false) {\n        done(TCGB.CLOSED);",
+    "expectFailing": "a tab that says it is listening after it was closed gets no cards"
   }
 ]

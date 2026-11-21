@@ -397,6 +397,23 @@ describe("Send to BAN", () => {
     expect(p.tip()).toStartWith("Saved tcg-orders-2025.csv");
   });
 
+  test("a message of another type from the tab gets no cards", () => {
+    const p = mount();
+    p.document.querySelector("button.tcg-banner-send").click();
+    p.window.dispatchEvent(new p.window.MessageEvent("message", { data: { type: "something-else" }, origin: "https://mtgban.com", source: p.tabs[0] }));
+    expect(p.tabs[0].posted).toEqual([]);
+    expect(p.word()).toBe("sending");
+  });
+
+  test("a tab that says it is listening after it was closed gets no cards", () => {
+    const p = mount();
+    p.document.querySelector("button.tcg-banner-send").click();
+    p.tabs[0].closed = true;
+    p.ready();
+    expect(p.tabs[0].posted).toEqual([]);
+    expect(p.tip()).toBe("The upload page was closed; try again");
+  });
+
   test("a second send closes the first tab, which would wait for good", () => {
     const p = mount();
     const sends = p.document.querySelectorAll("button.tcg-banner-send");
