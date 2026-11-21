@@ -12,7 +12,7 @@
   puts your range and search back when it is done.
 - **Makes every order number a link.** Clicking `17B3D927-60B89F-0DA62` runs
   TCGplayer's own search for it and shows you that order alone.
-- **Sends an order to BAN.** *Send to BAN* under an order opens mtgban's
+- **Sends an order to BAN.** The BAN icon beside an order number opens mtgban's
   uploader in a new tab and hands it the order's cards, each by its TCGplayer
   product id, so every card resolves to its exact printing.
 
