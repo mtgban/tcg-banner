@@ -1,5 +1,5 @@
 // The content script on TCGplayer's order history: every order number made
-// a control that searches for it, a Send to BAN under each order whose
+// a control that searches for it, a Send to BAN beside each order whose
 // cards can be sent, and the panel that saves a year as CSV.
 
 globalThis.TCGB = globalThis.TCGB || {};
@@ -113,7 +113,10 @@ globalThis.TCGB = globalThis.TCGB || {};
     var button = document.createElement("button");
     button.type = "button";
     button.className = "tcg-banner-send";
-    button.textContent = "Send to BAN";
+    // The stroopwafel alone, beside the number; the name is for a screen
+    // reader and the cursor.
+    button.setAttribute("aria-label", "Send to BAN");
+    button.title = "Send to BAN";
     button.addEventListener("click", function () {
       // A walk owns the panel until it ends.
       if (panel.working()) {
@@ -138,7 +141,7 @@ globalThis.TCGB = globalThis.TCGB || {};
         panel.recap(["Sent " + plural(count, "card", "cards") + " of " + order.id].concat(left(order, cards)).join("\n"));
       });
     });
-    after.after(document.createElement("br"), button);
+    after.after(button);
   }
 
   // holdSends disables every Send to BAN while a walk runs.

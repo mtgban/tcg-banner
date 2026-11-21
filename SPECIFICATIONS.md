@@ -237,8 +237,9 @@ written with what was read.
 
 ## 6. Send to BAN
 
-Each order with a line that can be sent gets **Send to BAN** under its
-number. The lines are on the page already, so the click opens the tab with
+Each order with a line that can be sent gets **Send to BAN** beside its
+number: the BAN stroopwafel as a small round button, named "Send to BAN"
+for a screen reader and on hover. The lines are on the page already, so the click opens the tab with
 nothing asynchronous in front of `window.open`. The protocol is cm-banner's:
 
 ```

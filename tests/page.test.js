@@ -150,6 +150,14 @@ describe("the order number", () => {
 });
 
 describe("Send to BAN", () => {
+  test("is the BAN icon beside the order number, named for a screen reader", () => {
+    const p = mount();
+    const send = p.document.querySelector("button.tcg-banner-send");
+    expect(send.textContent).toBe("");
+    expect(send.getAttribute("aria-label")).toBe("Send to BAN");
+    expect(send.previousElementSibling.className).toBe("tcg-banner-order");
+  });
+
   test("an order with nothing to send gets none", () => {
     const p = mount({ change: (html) => html.replaceAll("/magic/ice-age/portent", "/pokemon/base-set/portent") });
     const first = p.document.querySelector(".orderWrap");
