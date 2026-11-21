@@ -412,7 +412,7 @@ describe("Send to BAN", () => {
     expect(p.failed()).toBe(false);
     await p.idle();
     expect(p.word()).toBe("23 orders");
-    expect(p.tip()).toBe("Saved tcg-orders-2025.csv from 3 pages\nSend to BAN: The upload page was blocked; use the CSV");
+    expect(p.tip()).toBe("Saved tcg-orders-2025.csv from 3 pages\nSend to BAN: The upload page was blocked; allow pop-ups here and try again");
   });
 
   test("a send answered during a walk leaves the walk's panel alone", async () => {
@@ -474,7 +474,7 @@ describe("Send to BAN", () => {
     const p = mount({ blockPopups: true });
     p.document.querySelector("button.tcg-banner-send").click();
     expect(p.failed()).toBe(true);
-    expect(p.tip()).toBe("The upload page was blocked; use the CSV");
+    expect(p.tip()).toBe("The upload page was blocked; allow pop-ups here and try again");
   });
 
   test("a line not in English is left out and counted", () => {
