@@ -1,11 +1,14 @@
-import { test, expect, describe, afterEach } from "bun:test";
+import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { Window } from "happy-dom";
-import { TCGB } from "./helpers.js";
+import { TCGB, restore } from "./helpers.js";
 
 // fetchPage parses what it reads, as a tab's DOMParser does.
 globalThis.DOMParser = new Window().DOMParser;
 
 const realFetch = globalThis.fetch;
+// These are the real fetchPage and setFilter whatever ran before.
+beforeEach(restore);
+
 afterEach(() => {
   globalThis.fetch = realFetch;
 });

@@ -17,6 +17,12 @@ for (const name of ["money.js", "csv.js", "read.js", "net.js", "walk.js", "hando
 
 export const TCGB = globalThis.TCGB;
 
+// REAL is TCGB as the scripts left it. Every test file shares the one
+// TCGB, and bun runs the files in whatever order the directory lists them,
+// so a test that swaps a piece of it puts this back after itself.
+export const REAL = Object.freeze({ ...TCGB });
+export const restore = () => Object.assign(TCGB, REAL);
+
 export function text(name) {
   return readFileSync(new URL("./fixtures/" + name, import.meta.url), "utf8");
 }
