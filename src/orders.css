@@ -25,6 +25,12 @@
   opacity: 0.55;
 }
 
+/* The number and the icon beside it, kept to one line; the icon may run
+   past the header's column into the space before its buttons. */
+span.tcg-banner-number {
+  white-space: nowrap;
+}
+
 /* The order number, made a control: it reads as the number it replaces,
    underlined, in TCGplayer's own link blue. */
 button.tcg-banner-order {

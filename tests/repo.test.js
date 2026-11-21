@@ -72,6 +72,12 @@ describe("the panel", () => {
   });
 });
 
+describe("the order header", () => {
+  test("keeps the number and its icon on one line", () => {
+    expect(read("src/orders.css")).toMatch(/span\.tcg-banner-number \{\s*white-space: nowrap;/);
+  });
+});
+
 describe("punctuation", () => {
   test("no em dash in the source, the docs or the config", () => {
     const names = [
