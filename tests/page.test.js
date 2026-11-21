@@ -312,6 +312,33 @@ describe("Send to BAN", () => {
     expect(p.tip()).toStartWith("Sent ");
   });
 
+  test("says it is sending until mtgban's page listens", () => {
+    const p = mount();
+    p.document.querySelector("button.tcg-banner-send").click();
+    expect(p.word()).toBe("sending");
+    expect(p.done()).toBe(false);
+    expect(p.tip()).toBe("Waiting for mtgban's upload page to take the cards");
+    // Coming back while the tab is still open changes nothing.
+    p.window.dispatchEvent(new p.window.Event("focus"));
+    expect(p.word()).toBe("sending");
+    p.ready();
+    expect(p.word()).toBe("sent");
+    expect(p.done()).toBe(true);
+  });
+
+  test("a BAN tab closed before it listened is noticed on coming back", () => {
+    const p = mount();
+    p.document.querySelector("button.tcg-banner-send").click();
+    p.tabs[0].closed = true;
+    p.window.dispatchEvent(new p.window.Event("focus"));
+    expect(p.word()).toBe("");
+    expect(p.failed()).toBe(true);
+    expect(p.tip()).toBe("The upload page was closed; try again");
+    // The listener went with it: a late ready from that tab posts nothing.
+    p.ready();
+    expect(p.tabs[0].posted).toEqual([]);
+  });
+
   test("listens only to mtgban, from the tab it opened", () => {
     const p = mount();
     p.document.querySelector("button.tcg-banner-send").click();

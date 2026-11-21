@@ -41,8 +41,10 @@ globalThis.TCGB = globalThis.TCGB || {};
   };
 
   TCGB.REPLACED = "Another order was sent instead";
+  TCGB.CLOSED = "The upload page was closed; try again";
 
-  // A handoff still waiting to hear from its tab: {listener, opened, done}.
+  // A handoff still waiting to hear from its tab: {listener, onFocus,
+  // opened, done}.
   // The page it opens has no deadline, so one at a time is what keeps a tab
   // that never answers from leaving its listener behind for the life of
   // this page.
@@ -51,13 +53,12 @@ globalThis.TCGB = globalThis.TCGB || {};
   // handOff opens the game's handoff page and gives it csv, rows long. It
   // must be called from a click with nothing asynchronous in front of it:
   // window.open needs the click. done(error) is called once, with "" when
-  // the rows have gone, or TCGB.REPLACED when a later send took over: its
+  // the rows have gone, TCGB.CLOSED when the tab was closed before it said
+  // it was listening, or TCGB.REPLACED when a later send took over: its
   // tab, still waiting for rows that will not come, is closed.
   TCGB.handOff = function (game, csv, rows, done) {
     if (awaiting) {
-      var replaced = awaiting;
-      awaiting = null;
-      window.removeEventListener("message", replaced.listener);
+      var replaced = stopWaiting();
       if (!replaced.opened.closed) {
         replaced.opened.close();
       }
@@ -78,10 +79,9 @@ globalThis.TCGB = globalThis.TCGB || {};
       ) {
         return;
       }
-      window.removeEventListener("message", onMessage);
-      awaiting = null;
+      stopWaiting();
       if (opened.closed) {
-        done("The upload page was closed; try again");
+        done(TCGB.CLOSED);
         return;
       }
       // Answered to the origin that spoke, which is where the page ended
@@ -91,7 +91,27 @@ globalThis.TCGB = globalThis.TCGB || {};
       done("");
     }
 
-    awaiting = { listener: onMessage, opened: opened, done: done };
+    // A tab closed before it spoke never will. Coming back to this one is
+    // when that can be seen, with no timer: it is where the person is.
+    function onFocus() {
+      if (opened.closed) {
+        stopWaiting();
+        done(TCGB.CLOSED);
+      }
+    }
+
+    awaiting = { listener: onMessage, onFocus: onFocus, opened: opened, done: done };
     window.addEventListener("message", onMessage);
+    window.addEventListener("focus", onFocus);
   };
+
+  // stopWaiting takes the waiting handoff's listeners down and answers with
+  // it.
+  function stopWaiting() {
+    var was = awaiting;
+    awaiting = null;
+    window.removeEventListener("message", was.listener);
+    window.removeEventListener("focus", was.onFocus);
+    return was;
+  }
 })(globalThis.TCGB);

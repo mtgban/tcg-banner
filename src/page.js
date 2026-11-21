@@ -135,7 +135,11 @@ globalThis.TCGB = globalThis.TCGB || {};
       return n + l.qty;
     }, 0);
     if (!panel.working()) {
+      // Until mtgban's page says it is listening, which it does only once
+      // the reader is signed in there with the upload open to them.
       panel.clear();
+      panel.word("sending");
+      panel.recap("Waiting for mtgban's upload page to take the cards");
     }
     TCGB.handOff("magic", TCGB.cardsCSV(cards.lines), cards.lines.length, function (error) {
       // The later send speaks for itself. During a walk a send that went
@@ -149,6 +153,7 @@ globalThis.TCGB = globalThis.TCGB || {};
         return;
       }
       if (error) {
+        panel.word("");
         panel.fail(error);
         return;
       }
