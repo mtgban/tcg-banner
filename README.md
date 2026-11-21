@@ -10,7 +10,9 @@
   the year itself, reads every page, checks each one is still that year, and
   puts your range and search back when it is done.
 - **Makes every order number a link.** Clicking `17B3D927-60B89F-0DA62` runs
-  TCGplayer's own search for it and shows you that order alone.
+  TCGplayer's own search for it and shows you that order alone. There the
+  panel is that order's: *Download CSV* saves its cards, one row per line,
+  and *Send to BAN* sends them.
 - **Sends an order to BAN.** The BAN icon beside an order number opens mtgban's
   uploader in a new tab and hands it the order's cards, each by its TCGplayer
   product id, so every card resolves to its exact printing.

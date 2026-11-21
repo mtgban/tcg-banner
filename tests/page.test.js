@@ -2,6 +2,7 @@
 
 import { test, expect, describe } from "bun:test";
 import { mount } from "./panel.js";
+import { TCGB, docOf, pageHTML } from "./helpers.js";
 
 describe("the panel", () => {
   test("offers the years TCGplayer lists, and nothing under its buttons", () => {
@@ -118,6 +119,71 @@ describe("Download CSV", () => {
     p.window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
     await p.idle();
+  });
+});
+
+describe("one order", () => {
+  // The list a click on an order number leaves: the search holds it, and
+  // the heading counts one order.
+  const ONE = "261120-0001";
+  const one = (options = {}) => mount({ search: ONE, totals: { "Last 30 Days": 1 }, ...options });
+
+  test("the panel offers its cards, as a file or to BAN, and no year", () => {
+    const p = one();
+    expect(p.year()).toBe(null);
+    expect([...p.panel.querySelectorAll(".tcg-banner-go")].map((b) => b.textContent)).toEqual(["Download CSV", "Send to BAN"]);
+    expect(p.tip()).toBe("Save the cards of " + ONE + " as CSV, or send them to BAN");
+    expect(p.below()).toBe(0);
+    expect(p.titled()).toBe(0);
+  });
+
+  test("Download CSV saves that order's lines and asks TCGplayer nothing", async () => {
+    const p = one();
+    p.button("Download CSV").click();
+    const file = await p.file();
+    expect(file.name).toBe("tcg-order-" + ONE + ".csv");
+    const rows = file.text.trimEnd().split("\n");
+    expect(rows[0]).toStartWith("TCGplayer Product ID,Name,Edition,");
+    const [order] = TCGB.readPage(docOf(p.session.html(1))).orders;
+    expect(order.id).toBe(ONE);
+    expect(rows.length).toBe(1 + order.lines.length);
+    expect(rows.slice(1).every((r) => r.includes("," + ONE + ","))).toBe(true);
+    expect(p.session.asked).toEqual([]);
+    expect(p.done()).toBe(true);
+    expect(p.word()).toMatch(/^\d+ cards?$/);
+    expect(p.tip()).toBe("Saved tcg-order-" + ONE + ".csv");
+  });
+
+  test("Send to BAN gives mtgban the same cards as the icon beside the number", () => {
+    const p = one();
+    p.button("Send to BAN").click();
+    p.ready(0);
+    p.document.querySelector("button.tcg-banner-send").click();
+    p.ready(1);
+    expect(p.tabs.length).toBe(2);
+    expect(p.tabs[0].posted[0].data.csv).toBe(p.tabs[1].posted[0].data.csv);
+    expect(p.tip()).toStartWith("Sent ");
+  });
+
+  test("an order with nothing BAN reads still saves, and its Send to BAN is off", () => {
+    const p = one({ change: (html) => html.replaceAll("/magic/", "/pokemon/") });
+    expect(p.button("Send to BAN").disabled).toBe(true);
+    expect(p.tip()).toBe("Save the cards of " + ONE + " as CSV; none of them can go to BAN");
+    expect(p.button("Download CSV").disabled).toBe(false);
+  });
+
+  test("a search listing several orders keeps the year panel", () => {
+    // Ten on the page, more behind the pager.
+    expect(mount({ search: "Portent", totals: { "Last 30 Days": 12 } }).year() === null).toBe(false);
+    // One on the last page of eleven.
+    const body = pageHTML({ search: "Portent", total: 11, n: 2 });
+    const last = mount({ search: "Portent", body });
+    expect(last.document.querySelectorAll(".orderWrap").length).toBe(1);
+    expect(last.year() === null).toBe(false);
+  });
+
+  test("a single order with no search is still a year's list", () => {
+    expect(mount({ totals: { "Last 30 Days": 1 } }).year() === null).toBe(false);
   });
 });
 

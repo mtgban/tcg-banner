@@ -35,6 +35,27 @@ describe("the orders file", () => {
   });
 });
 
+describe("one order's file", () => {
+  test("names its order column so docparse does not take it for a variant", () => {
+    const columns = header(TCGB.orderCSV(orders()[0])).split(",");
+    expect(columns).toEqual([
+      "TCGplayer Product ID", "Name", "Edition", "Foil", "Condition", "Quantity", "Price",
+      "Order", "Order Date", "Seller", "Game", "Language",
+    ]);
+    // docparse reads a header holding "number" as the card's variant, and
+    // one of exactly "tcgplayer id" as a SKU that wipes the product id.
+    expect(columns.filter((c) => /number/i.test(c) || c.toLowerCase() === "tcgplayer id")).toEqual([]);
+  });
+
+  test("one row per line of that order, each naming it", () => {
+    const order = orders()[0];
+    const [head, ...rows] = rowsOf(TCGB.orderCSV(order));
+    expect(rows.length).toBe(order.lines.length);
+    expect(rows.map((r) => r[head.indexOf("Order")])).toEqual(order.lines.map(() => order.id));
+    expect(rows.map((r) => r[0])).toEqual(order.lines.map((l) => l.productID));
+  });
+});
+
 describe("the cards sent to BAN", () => {
   test("carry the uploader's columns and nothing else", () => {
     const lines = orders()[0].lines;
@@ -50,9 +71,12 @@ describe("free text", () => {
     const seller = all.find((o) => o.kind === "Seller");
     seller.seller = "=1+1";
     const direct = all[0];
-    direct.lines[0] = { ...direct.lines[0], name: "+2 Mace", edition: "-Set" };
+    direct.lines[0] = { ...direct.lines[0], seller: "@SUM(A1)", name: "+2 Mace", edition: "-Set" };
     const row = (csv, id) => csv.split("\n").find((r) => r.startsWith(id + ","));
     expect(row(TCGB.ordersCSV(all), seller.id)).toContain(",'=1+1,");
+    const items = TCGB.orderCSV(direct).split("\n");
+    expect(items[1]).toStartWith("4842,'+2 Mace,'-Set,");
+    expect(items[1]).toContain(",'@SUM(A1),");
     // mtgban reads the cards file, and reads it as written.
     expect(TCGB.cardsCSV([direct.lines[0]]).split("\n")[1]).toStartWith("4842,+2 Mace,-Set,");
   });

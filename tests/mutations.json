@@ -173,5 +173,26 @@
     "find": "pathname.replace(/\\/{2,}/g, \"/\")",
     "replace": "pathname",
     "expectFailing": "works at every spelling of the path the server answers"
+  },
+  {
+    "guard": "the order panel needs the heading to count one order",
+    "file": "src/page.js",
+    "find": "return TCGB.readPage(document).list.total === 1 ? orders[0] : null;",
+    "replace": "return orders[0];",
+    "expectFailing": "a search listing several orders keeps the year panel"
+  },
+  {
+    "guard": "the order panel needs a search",
+    "file": "src/page.js",
+    "find": "if (!filter.search || orders.length !== 1 || orders[0].error) {",
+    "replace": "if (orders.length !== 1 || orders[0].error) {",
+    "expectFailing": "a single order with no search is still a year's list"
+  },
+  {
+    "guard": "Send to BAN is off for an order with nothing to send",
+    "file": "src/page.js",
+    "find": "}).disabled = !cards.lines.length;",
+    "replace": "}).disabled = false;",
+    "expectFailing": "an order with nothing BAN reads still saves, and its Send to BAN is off"
   }
 ]

@@ -233,6 +233,13 @@ history file shares, under the same names and meaning:
 The money reads left to right as a sum: `Subtotal`, `Shipping`, `Sales Tax`
 and `Refunded` come to `Total`.
 
+**`tcg-order-<number>.csv`**, saved from the panel on one order (section 7),
+one row per line of it, every line included: the columns of section 6, then
+`Order`, `Order Date`, `Seller` (the line's own seller on a Direct order),
+`Game` and `Language`. `Order`, not `Order Number`: docparse reads a header
+holding "number" as the card's variant. `Name`, `Edition` and `Seller` are guarded like
+the orders file's seller.
+
 ## 6. Send to BAN
 
 Each order with a line that can be sent gets **Send to BAN** beside its
@@ -288,7 +295,11 @@ lands in whichever mode, uploader or buylist, the reader last used.
 ## 7. The panel
 
 ck-banner's panel: the stroopwafel and "TCG BANner", one word, a mark, a
-drawn tooltip, one row (the year, *Download CSV*). A fixed width; nothing
+drawn tooltip, one row (the year, *Download CSV*). On a list a search has
+narrowed to one order (a search is set, the heading counts one order, and
+that order is read whole), the row is that order's instead: *Download CSV*
+saves its cards with no request, and *Send to BAN* does what the icon beside
+its number does, disabled when none of its lines can be sent. A fixed width; nothing
 is written under the row and nothing carries a `title`. While a walk runs the
 word is the page being read (`page 3 of 22`), every control is disabled,
 Escape stops it, and the page asks before it is left. Done, the word counts

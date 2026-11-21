@@ -63,8 +63,30 @@ globalThis.TCGB = globalThis.TCGB || {};
     ["Price", function (l) { return TCGB.decimal(l.each); }],
   ];
 
+  // One order's lines, for a spreadsheet: the uploader's columns, its free
+  // text guarded, then where each line came from. "Order", not "Order
+  // Number": docparse reads a header holding "number" as the card's variant.
+  var ITEMS = CARDS.map(function (c) {
+    return c[0] === "Name" || c[0] === "Edition"
+      ? [c[0], function (l) { return text(c[1](l)); }]
+      : c;
+  }).concat([
+    ["Order", function (l) { return l.order.id; }],
+    ["Order Date", function (l) { return l.order.dateText; }],
+    ["Seller", function (l) { return text(l.seller || l.order.seller); }],
+    ["Game", function (l) { return l.game; }],
+    ["Language", function (l) { return l.language; }],
+  ]);
+
   TCGB.ordersCSV = function (orders) {
     return table(ORDERS, orders);
+  };
+
+  // orderCSV is one order's file: a row for every line it holds.
+  TCGB.orderCSV = function (order) {
+    return table(ITEMS, order.lines.map(function (l) {
+      return Object.assign({ order: order }, l);
+    }));
   };
 
   // cardsCSV is what goes to mtgban: the uploader's columns alone.
