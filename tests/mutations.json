@@ -1,0 +1,156 @@
+[
+  {
+    "guard": "a price with three decimals is refused",
+    "file": "src/money.js",
+    "find": "\\.(\\d{2})$/;",
+    "replace": "\\.(\\d{2,3})$/;",
+    "expectFailing": "refuses three decimals"
+  },
+  {
+    "guard": "a value with a comma is quoted",
+    "file": "src/csv.js",
+    "find": "if (/[\",\\r\\n]/.test(text)) {",
+    "replace": "if (/[\"\\r\\n]/.test(text)) {",
+    "expectFailing": "a comma is quoted"
+  },
+  {
+    "guard": "an order whose lines do not add up is refused",
+    "file": "src/read.js",
+    "find": "if (qty !== s.quantity || subtotal !== s.subtotal || s.subtotal + s.shipping + s.tax !== s.total) {",
+    "replace": "if (false) {",
+    "expectFailing": "refuses an order whose lines do not add up"
+  },
+  {
+    "guard": "a note other than one refund or several is refused",
+    "file": "src/read.js",
+    "find": "if (aid !== REFUNDS_AID || !head || list.length !== 1) {",
+    "replace": "if (false) {",
+    "expectFailing": "refuses a note it does not read"
+  },
+  {
+    "guard": "several refunds must come to the total their note names",
+    "file": "src/read.js",
+    "find": "if (listed !== TCGB.cents(head[1])) {",
+    "replace": "if (false) {",
+    "expectFailing": "refuses several refunds that do not come to their total"
+  },
+  {
+    "guard": "a line not in English is not sent",
+    "file": "src/page.js",
+    "find": "} else if (l.language !== \"English\") {",
+    "replace": "} else if (false) {",
+    "expectFailing": "a line not in English is left out and counted"
+  },
+  {
+    "guard": "details of another shape are not read as a condition",
+    "file": "src/read.js",
+    "find": "[A-Za-z)]))?$/;",
+    "replace": "[A-Za-z)]))?/;",
+    "expectFailing": "details of another shape are the line's problem, not a guess"
+  },
+  {
+    "guard": "the thumbnail's fallback is not a product id",
+    "file": "src/read.js",
+    "find": "if (id && id[1] !== \"0\") {",
+    "replace": "if (id) {",
+    "expectFailing": "the thumbnail's fallback is no product id"
+  },
+  {
+    "guard": "a Cloudflare challenge is not read as a refusal",
+    "file": "src/net.js",
+    "find": "if (response.headers.get(\"cf-mitigated\") === \"challenge\") {",
+    "replace": "if (false) {",
+    "expectFailing": "a Cloudflare challenge is told apart from an ordinary refusal"
+  },
+  {
+    "guard": "every page must name the year asked for",
+    "file": "src/walk.js",
+    "find": "if (l.empty || l.placed !== TCGB.placedIn(year)) {",
+    "replace": "if (l.empty) {",
+    "expectFailing": "a heading naming another range refuses the walk"
+  },
+  {
+    "guard": "every page must hold as many orders as its heading says",
+    "file": "src/walk.js",
+    "find": " || page.orders.length !== last - first + 1) {",
+    "replace": ") {",
+    "expectFailing": "a page holding fewer orders than its heading says refuses the walk"
+  },
+  {
+    "guard": "an order seen twice refuses the walk",
+    "file": "src/walk.js",
+    "find": "if (seen[o.id]) {",
+    "replace": "if (false) {",
+    "expectFailing": "an order seen twice refuses the walk"
+  },
+  {
+    "guard": "an order from another year refuses the walk",
+    "file": "src/walk.js",
+    "find": "if (String(o.date.year) !== year) {",
+    "replace": "if (false) {",
+    "expectFailing": "an order from another year refuses the walk"
+  },
+  {
+    "guard": "the pager must agree with the heading",
+    "file": "src/walk.js",
+    "find": "(page.pageLast === null ? pages !== 1 : page.pageLast !== pages)",
+    "replace": "false",
+    "expectFailing": "a pager disagreeing with the heading refuses the walk"
+  },
+  {
+    "guard": "a stopped walk still puts the range back",
+    "file": "src/walk.js",
+    "find": "if (!started) {",
+    "replace": "if (true) {",
+    "expectFailing": "Escape stops the walk and the range still goes back"
+  },
+  {
+    "guard": "the handoff listens only to mtgban",
+    "file": "src/handoff.js",
+    "find": "!TCGB.isBanHost(event.origin) ||",
+    "replace": "",
+    "expectFailing": "listens only to mtgban, from the tab it opened"
+  },
+  {
+    "guard": "the handoff listens only to the tab it opened",
+    "file": "src/handoff.js",
+    "find": "event.source !== opened ||",
+    "replace": "",
+    "expectFailing": "listens only to mtgban, from the tab it opened"
+  },
+  {
+    "guard": "Send to BAN is held while a walk runs",
+    "file": "src/page.js",
+    "find": "sends[i].disabled = on;",
+    "replace": "sends[i].disabled = false;",
+    "expectFailing": "waits while a walk runs, which owns the panel"
+  },
+  {
+    "guard": "a superseded handoff's tab is closed",
+    "file": "src/handoff.js",
+    "find": "replaced.opened.close();",
+    "replace": "",
+    "expectFailing": "a second send closes the first tab, which would wait for good"
+  },
+  {
+    "guard": "nothing is sent after a challenge",
+    "file": "src/walk.js",
+    "find": "if (err.message === TCGB.CHALLENGE) {",
+    "replace": "if (false) {",
+    "expectFailing": "a challenge is left for the visitor, and nothing more is sent"
+  },
+  {
+    "guard": "spreadsheet free text is not a formula",
+    "file": "src/csv.js",
+    "find": "return /^[=+\\-@\\t\\r]/.test(value) ? \"'\" + value : value;",
+    "replace": "return value;",
+    "expectFailing": "a seller's name is not run as a formula"
+  },
+  {
+    "guard": "a send's result does not land on a running walk",
+    "file": "src/page.js",
+    "find": "if (error === TCGB.REPLACED || panel.working()) {",
+    "replace": "if (error === TCGB.REPLACED) {",
+    "expectFailing": "a send answered during a walk leaves the walk's panel alone"
+  }
+]
