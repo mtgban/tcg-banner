@@ -342,11 +342,19 @@ globalThis.TCGB = globalThis.TCGB || {};
       }
       return;
     }
-    var vendor = wrap.querySelectorAll('[data-aid="spn-sellerorderwidget-vendorname"] a');
-    if (vendor.length !== 1) {
-      refuse("a seller order with no seller");
+    var vendor = wrap.querySelectorAll('[data-aid="spn-sellerorderwidget-vendorname"]');
+    var link = vendor.length === 1 ? vendor[0].querySelectorAll("a") : [];
+    if (link.length === 1) {
+      order.seller = squeeze(link[0].textContent);
+      return;
     }
-    order.seller = squeeze(vendor[0].textContent);
+    // An order TCGplayer sold itself names it in plain text, with no
+    // feedback page to link.
+    if (vendor.length === 1 && !link.length && /^TCGPLAYER-/.test(order.id) && squeeze(vendor[0].textContent) === "TCGplayer") {
+      order.seller = "TCGplayer";
+      return;
+    }
+    refuse("a seller order with no seller");
   }
 
   // addsUp checks the lines are all of the order: their quantities come to

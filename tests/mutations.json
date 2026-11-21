@@ -152,5 +152,12 @@
     "find": "if (error === TCGB.REPLACED || panel.working()) {",
     "replace": "if (error === TCGB.REPLACED) {",
     "expectFailing": "a send answered during a walk leaves the walk's panel alone"
+  },
+  {
+    "guard": "plain text names TCGplayer alone as a seller",
+    "file": "src/read.js",
+    "find": "/^TCGPLAYER-/.test(order.id) && ",
+    "replace": "",
+    "expectFailing": "an order TCGplayer sold itself"
   }
 ]
