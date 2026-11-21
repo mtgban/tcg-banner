@@ -232,16 +232,17 @@ history file shares, under the same names and meaning:
 | `Seller` | the seller, or `TCGplayer Direct` |
 | `Tax State` | the state a `Sales Tax (NY)` row names, `NY`; empty for a plain `Sales Tax`, for Canada's `CA GST`, or for no tax row |
 | `Quantity`, `Subtotal`, `Shipping`, `Sales Tax` | the summary |
-| `Refunded` | the refunds' sum as a negative amount, `-$1.02`, or empty |
+| `Refund` | the refunds' sum as a negative amount, `-$1.02`, or empty |
+| `Tax Refund (est.)` | the part of `Refund` that was tax, as a negative amount, or empty without a refund; see below |
 | `Total` | `Total:` with the refunds taken off, the same as `Amount` |
-| `Refunded Tax` | the part of `Refunded` that was tax, as a negative amount, or empty without a refund; see below |
+| `Total Tax` | `Sales Tax` with `Tax Refund (est.)` taken off |
 
-The money reads left to right as a sum: `Subtotal`, `Shipping`, `Sales Tax`
-and `Refunded` come to `Total`. `Refunded Tax` comes after, being part of
-`Refunded` rather than added to it.
+`Subtotal`, `Shipping`, `Sales Tax` and `Refund` add up to `Total`.
+`Tax Refund (est.)` sits beside `Refund` as the part of it that was tax, not
+added to it, and `Total Tax` after `Total` is what tax the order came to.
 
 A refund note gives one amount and never says how much of it was tax, so
-`Refunded Tax` is the refunds scaled by the order's own share of tax,
+`Tax Refund (est.)` is the refunds scaled by the order's own share of tax,
 `Sales Tax` over `Total:`, rounded to the cent. It is exact for a full
 refund, where it is the whole tax, and an estimate for any other. The saved
 page's $1.02 partial refund, on a $215.06 New York order with $17.52 of

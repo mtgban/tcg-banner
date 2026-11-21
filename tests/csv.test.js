@@ -12,7 +12,7 @@ function rowsOf(csv) {
 describe("the orders file", () => {
   test("starts with the columns go-mtgban's tool and ck-banner share", () => {
     expect(header(TCGB.ordersCSV(orders()))).toBe(
-      "Order ID,Order Date,Amount,Kind,Seller,Tax State,Quantity,Subtotal,Shipping,Sales Tax,Refunded,Total,Refunded Tax"
+      "Order ID,Order Date,Amount,Kind,Seller,Tax State,Quantity,Subtotal,Shipping,Sales Tax,Refund,Tax Refund (est.),Total,Total Tax"
     );
   });
 
@@ -23,15 +23,15 @@ describe("the orders file", () => {
     const at = (row, name) => row[head.indexOf(name)];
     const cents = (text) => (text === "" ? 0 : (text.startsWith("-") ? -1 : 1) * TCGB.cents(text.replace(/^-/, "")));
     for (const row of rows) {
-      const sum = ["Subtotal", "Shipping", "Sales Tax", "Refunded"].reduce((n, name) => n + cents(at(row, name)), 0);
+      const sum = ["Subtotal", "Shipping", "Sales Tax", "Refund"].reduce((n, name) => n + cents(at(row, name)), 0);
       expect([at(row, "Order ID"), sum]).toEqual([at(row, "Order ID"), cents(at(row, "Total"))]);
       expect(at(row, "Amount")).toBe(at(row, "Total"));
     }
     const refunded = all.find((o) => o.refunded);
     const row = rows.find((r) => r[0] === refunded.id);
-    expect(at(row, "Refunded")).toBe("-" + TCGB.dollars(refunded.refunded));
+    expect(at(row, "Refund")).toBe("-" + TCGB.dollars(refunded.refunded));
     expect(at(row, "Total")).toBe(TCGB.dollars(refunded.summary.total - refunded.refunded));
-    expect(at(rows.find((r) => r[0] !== refunded.id), "Refunded")).toBe("");
+    expect(at(rows.find((r) => r[0] !== refunded.id), "Refund")).toBe("");
   });
 });
 
@@ -42,7 +42,7 @@ describe("the refunded tax", () => {
     order.refunded = refunded;
     order.amount = order.summary.total - refunded;
     const [head, row] = rowsOf(TCGB.ordersCSV([order]));
-    return row[head.indexOf("Refunded Tax")];
+    return row[head.indexOf("Tax Refund (est.)")];
   };
 
   test("is the refund scaled by the order's tax over its Total", () => {
@@ -51,16 +51,25 @@ describe("the refunded tax", () => {
     expect(taxOf({ subtotal: 19754, shipping: 0, tax: 1752, total: 21506 }, 102)).toBe("-$0.08");
   });
 
+  test("comes off Sales Tax in Total Tax", () => {
+    const [order] = orders();
+    Object.assign(order.summary, { subtotal: 19754, shipping: 0, tax: 1752, total: 21506 });
+    order.refunded = 102;
+    order.amount = 21404;
+    const [head, row] = rowsOf(TCGB.ordersCSV([order]));
+    expect(row[head.indexOf("Total Tax")]).toBe("$17.44");
+    order.refunded = 0;
+    const [, plain] = rowsOf(TCGB.ordersCSV([order]));
+    expect(plain[head.indexOf("Total Tax")]).toBe("$17.52");
+  });
+
   test("is the whole tax for a full refund", () => {
     expect(taxOf({ subtotal: 700, shipping: 0, tax: 63, total: 763 }, 763)).toBe("-$0.63");
   });
 
   test("is nothing for an order without tax, and empty without a refund", () => {
     expect(taxOf({ subtotal: 700, shipping: 0, tax: 0, total: 700 }, 100)).toBe("$0.00");
-    // The last column, empty: the row ends on its comma.
-    const [order] = orders();
-    order.refunded = 0;
-    expect(TCGB.ordersCSV([order]).split("\n")[1]).toEndWith(",");
+    expect(taxOf({ subtotal: 700, shipping: 0, tax: 63, total: 763 }, 0)).toBe("");
   });
 });
 
