@@ -161,6 +161,21 @@ describe("refusals", () => {
     expect(s.state).toEqual({ range: "Last 30 Days", search: "" });
   });
 
+  test("Escape once every page is read keeps the year and still puts the range back", async () => {
+    const s = on(site({ totals: { 2025: 23 } }));
+    let stop = false;
+    const get = s.fetchPage;
+    TCGB.fetchPage = (n) => get(n).then((doc) => {
+      if (n === 3) stop = true;
+      return doc;
+    });
+    const result = await walk("2025", { stopped: () => stop });
+    expect(result.orders.length).toBe(23);
+    expect(result.restore).toBe("");
+    expect(s.asked.slice(-2)).toEqual(["POST Last 30 Days||true", "GET 1"]);
+    expect(s.state).toEqual({ range: "Last 30 Days", search: "" });
+  });
+
   test("asked to slow down, the walk waits before it puts the range back", async () => {
     const s = on(site({ totals: { 2025: 23 } }));
     const get = s.fetchPage;

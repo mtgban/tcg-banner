@@ -163,6 +163,9 @@ globalThis.TCGB = globalThis.TCGB || {};
       })
       .then(
         function () {
+          // Every page is read: a stop now could only keep the range from
+          // going back.
+          hooks = {};
           return restore().then(function (restored) {
             return { orders: orders, pending: pending, pages: pages || 1, restore: restored };
           });

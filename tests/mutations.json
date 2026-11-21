@@ -229,5 +229,12 @@
     "find": "(o.refunded * o.summary.tax) / o.summary.total",
     "replace": "(o.refunded * o.summary.tax) / o.summary.subtotal",
     "expectFailing": "is the whole tax for a full refund"
+  },
+  {
+    "guard": "a stop after the last page does not cancel the put-back",
+    "file": "src/walk.js",
+    "find": "          // going back.\n          hooks = {};\n",
+    "replace": "          // going back.\n",
+    "expectFailing": "Escape once every page is read keeps the year and still puts the range back"
   }
 ]
