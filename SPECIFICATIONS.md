@@ -363,28 +363,36 @@ token, an address or tracking link, the welcome line and a real seller.
 
 ## 11. Checked on the live site
 
-On 2026-11-20 the reader and the walk's checks ran in the account's own
-tab over every year it offers, one request every 1.2 s, with no challenge
-and no 429; the range was put back after each pass and checked.
+The reader and the walk's checks ran twice in the account's own tab, one
+request every 1.2 s, with no challenge and no 429, and the range was put
+back after each pass and checked. The first pass (2026-11-20) covered every
+year the dropdown offers. The second (2026-11-21), with the reader as
+section 1 has it, covered 2026 back to 2019 and was stopped during 2018.
 
-| Year | Orders | Lines | Pages |
+| Year | Orders | Pages | Lines |
 |------|-------:|------:|------:|
-| 2026 | 144 | 1,421 | 15 |
-| 2025 | 211 | 1,540 | 22 |
-| 2024 | 304 | 1,629 | 31 |
-| 2023 | 118 | 634 | 12 |
-| 2022 | 144 | 516 | 15 |
-| 2021 | 23 | 42 | 3 |
-| 2020 | 86 | 423 | 9 |
-| 2019 | 28 | 8 | 3 |
-| 2018 | 36 | 147 | 4 |
-| 2017 | 27 | 203 | 3 |
-| 2016 | 0 | | 1 |
+| 2026 | 144 | 15 | 1,644 |
+| 2025 | 211 | 22 | 1,690 |
+| 2024 | 304 | 31 | 1,640 |
+| 2023 | 118 | 12 | 635 |
+| 2022 | 144 | 15 | 578 |
+| 2021 | 23 | 3 | 42 |
+| 2020 | 86 | 9 | 521 |
+| 2019 | 28 | 3 | 86 |
+| 2018 | 36 | 4 | |
+| 2017 | 27 | 3 | |
+| 2016 | 0 | 1 | |
 
-Line counts are of the orders the first pass could read; that pass refused
-106 orders on the shapes section 1 now reads (multiple and shipping cost
-refunds, CA GST, the older order numbers). Every page had the year
-selected, named it, held its own slice of the total and as many orders as
-it said. Every line was Magic: 6,562 lines, 7 sealed, 5 not in English, 1
-custom listing. 165 refunds (41 full), and 195 orders with no tax row
-naming a state.
+Orders and pages are the same in both passes; lines are the second pass's,
+which did not reach 2018 and before. Every page had the year selected,
+named it, held its own slice of the total and as many orders as it said.
+The second pass read every order but six that TCGplayer sold itself
+(`TCGPLAYER-...`, five in 2023 and one in 2024), whose lines are not
+counted above; section 1 reads them since, and they have not been read
+live again. One line, a custom listing, had no product id.
+
+Across the second pass (2019 to 2026, and the part of 2018 read before it
+stopped): 48 full refunds, 183 partial and 5 of shipping cost; tax rows of
+859 `Sales Tax (XX)`, 203 plain `Sales Tax` and 2 `CA GST`; 7 sealed lines
+and 5 not in English (4 Japanese, 1 Spanish). In the first pass every line
+was Magic.
