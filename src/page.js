@@ -286,9 +286,10 @@ globalThis.TCGB = globalThis.TCGB || {};
 
     function write(chosen, result) {
       var name = "tcg-orders-" + chosen + ".csv";
+      var restore = result.restore ? [result.restore] : [];
       if (!result.orders.length) {
         panel.word("no orders");
-        panel.fail(["No orders were placed in " + chosen + (result.pending ? " that have shipped" : "")].concat(spoken()).join("\n"));
+        panel.fail(["No orders were placed in " + chosen + (result.pending ? " that have shipped" : "")].concat(restore, spoken()).join("\n"));
         return;
       }
       TCGB.download(TCGB.ordersCSV(result.orders), name);
@@ -298,10 +299,7 @@ globalThis.TCGB = globalThis.TCGB || {};
       if (result.pending) {
         notes.push(plural(result.pending, "pending order", "pending orders") + " left out");
       }
-      if (result.restore) {
-        notes.push(result.restore);
-      }
-      panel.recap(notes.concat(spoken()).join("\n"));
+      panel.recap(notes.concat(restore, spoken()).join("\n"));
     }
 
     // spoken takes what a send failed with during the walk, to be said

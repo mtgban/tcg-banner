@@ -236,5 +236,12 @@
     "find": "          // going back.\n          hooks = {};\n",
     "replace": "          // going back.\n",
     "expectFailing": "Escape once every page is read keeps the year and still puts the range back"
+  },
+  {
+    "guard": "an empty year still reports a failed put-back",
+    "file": "src/page.js",
+    "find": ".concat(restore, spoken()).join(\"\\n\"));\n        return;",
+    "replace": ".concat(spoken()).join(\"\\n\"));\n        return;",
+    "expectFailing": "a year with no orders still says when the range could not be put back"
   }
 ]
