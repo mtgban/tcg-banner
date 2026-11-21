@@ -66,7 +66,7 @@ globalThis.TCGB = globalThis.TCGB || {};
     }
     var opened = window.open(TCGB.handoffURL(game), "_blank");
     if (!opened) {
-      done("The upload page was blocked; use the CSV");
+      done("The upload page was blocked; allow pop-ups here and try again");
       return;
     }
 
