@@ -146,8 +146,14 @@ is refused, never exported short.
 
 Manifest V3, no `permissions`, `host_permissions`, `background` or
 `web_accessible_resources`; a test pins their absence. One content script on
-`https://store.tcgplayer.com/myaccount/orderhistory*`, which gets no panel
-where the page has no filter form or heading (a sign-in page). Every request
+`https://store.tcgplayer.com/*`, the host alone. The path is decided in
+`page.js`, the way the server reads it: `/myaccount/orderhistory` in any
+letter case, with slashes doubled or not, and a trailing one or not. The
+server answers `//myaccount/orderhistory` alike, a visitor was found there
+(2026-11-21), and a match pattern for one spelling misses the others. On any
+other path the script returns before it touches the page, and on the history
+it gets no panel where the page has no filter form or heading (a sign-in
+page). Every request
 is same-origin with the visitor's session.
 
 ## 3. Order numbers

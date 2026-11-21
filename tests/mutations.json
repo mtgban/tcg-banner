@@ -159,5 +159,19 @@
     "find": "/^TCGPLAYER-/.test(order.id) && ",
     "replace": "",
     "expectFailing": "an order TCGplayer sold itself"
+  },
+  {
+    "guard": "the page script runs on the order history alone",
+    "file": "src/page.js",
+    "find": "if (!onHistory(location.pathname)) {",
+    "replace": "if (false) {",
+    "expectFailing": "stays off the site's other pages"
+  },
+  {
+    "guard": "the path is read with its slashes squeezed",
+    "file": "src/page.js",
+    "find": "pathname.replace(/\\/{2,}/g, \"/\")",
+    "replace": "pathname",
+    "expectFailing": "works at every spelling of the path the server answers"
   }
 ]

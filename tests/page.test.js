@@ -10,8 +10,8 @@ describe("the panel", () => {
     expect(years[0]).toBe("2026");
     expect(years.at(-1)).toBe("2016");
     expect(years).not.toContain("Last 30 Days");
-    expect(p.button("Orders")).toBeTruthy();
-    expect(p.button("Items")).toBeTruthy();
+    expect(!!p.button("Orders")).toBe(true);
+    expect(!!p.button("Items")).toBe(true);
     expect(p.below()).toBe(0);
     expect(p.titled()).toBe(0);
   });
@@ -21,9 +21,29 @@ describe("the panel", () => {
     expect(p.year().value).toBe("2024");
   });
 
+  test("works at every spelling of the path the server answers", async () => {
+    for (const path of ["//myaccount/orderhistory", "/MyAccount/OrderHistory", "/myaccount/orderhistory/?PageNumber=2"]) {
+      const p = mount({ url: "https://store.tcgplayer.com" + path, totals: { 2025: 23 } });
+      expect([path, !!p.panel]).toEqual([path, true]);
+    }
+    const p = mount({ url: "https://store.tcgplayer.com//myaccount/orderhistory", totals: { 2025: 23 } });
+    p.choose("2025");
+    p.button("Orders").click();
+    await p.idle();
+    expect(p.word()).toBe("23 orders");
+  });
+
+  test("stays off the site's other pages", () => {
+    // The manifest runs it on the whole store; the order history's markup
+    // on another path is still not the order history.
+    const p = mount({ url: "https://store.tcgplayer.com/myaccount/messagecenter" });
+    expect(p.panel === null).toBe(true);
+    expect(p.document.querySelectorAll("button.tcg-banner-order").length).toBe(0);
+  });
+
   test("is not put on a page without the order history", () => {
     const p = mount({ body: "<form id=login></form>" });
-    expect(p.panel).toBeNull();
+    expect(p.panel === null).toBe(true);
   });
 });
 
@@ -133,8 +153,8 @@ describe("Send to BAN", () => {
   test("an order with nothing to send gets none", () => {
     const p = mount({ change: (html) => html.replaceAll("/magic/ice-age/portent", "/pokemon/base-set/portent") });
     const first = p.document.querySelector(".orderWrap");
-    expect(first.querySelector("button.tcg-banner-order")).toBeTruthy();
-    expect(first.querySelector("button.tcg-banner-send")).toBeNull();
+    expect(first.querySelectorAll("button.tcg-banner-order").length).toBe(1);
+    expect(first.querySelectorAll("button.tcg-banner-send").length).toBe(0);
   });
 
   test("every order of Magic cards gets one", () => {

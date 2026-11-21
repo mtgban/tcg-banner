@@ -39,10 +39,9 @@ describe("the manifest", () => {
     expect(named.filter((name) => !existsSync(new URL(name, root)))).toEqual([]);
   });
 
-  test("runs on the order history and nowhere else", () => {
-    expect(manifest.content_scripts.flatMap((cs) => cs.matches)).toEqual([
-      "https://store.tcgplayer.com/myaccount/orderhistory*",
-    ]);
+  test("runs on TCGplayer's store alone", () => {
+    // The page script decides the path itself (page.test.js).
+    expect(manifest.content_scripts.flatMap((cs) => cs.matches)).toEqual(["https://store.tcgplayer.com/*"]);
   });
 
   test("carries package.json's version", () => {

@@ -7,6 +7,18 @@ globalThis.TCGB = globalThis.TCGB || {};
 (function (TCGB) {
   "use strict";
 
+  // The manifest names the host alone, and the path is decided here, read
+  // the way TCGplayer's server reads it: any letter case, and slashes
+  // doubled or not. It answers //myaccount/orderhistory too, which no
+  // single match pattern covers alongside the plain one.
+  function onHistory(pathname) {
+    return pathname.replace(/\/{2,}/g, "/").replace(/\/$/, "").toLowerCase() === "/myaccount/orderhistory";
+  }
+
+  if (!onHistory(location.pathname)) {
+    return;
+  }
+
   var filter = TCGB.readFilter(document);
   if (!filter || !document.querySelector(".breadcrumbs")) {
     // A sign-in page, an error: nothing here to read.
