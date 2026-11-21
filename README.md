@@ -39,7 +39,13 @@ The same unpacked folder works in Chrome and Firefox.
 and pick this folder.
 
 **Firefox** - `about:debugging#/runtime/this-firefox`, *Load Temporary
-Add-on*, and pick `manifest.json`.
+Add-on*, and pick `manifest.json`. Firefox runs a Manifest V3 extension on a
+site only once you allow it there, so the panel does not appear until you
+do: on the order history, click the Extensions button (the puzzle piece),
+then tcg-banner, and choose to always allow it on store.tcgplayer.com; or
+in `about:addons`, tcg-banner, *Permissions*, turn on store.tcgplayer.com.
+Firefox drops a temporary add-on when it restarts, so this needs redoing
+each session.
 
 Then open your order history on TCGplayer; the panel is at the bottom right.
 
