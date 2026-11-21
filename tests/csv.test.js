@@ -4,41 +4,34 @@ import { TCGB, fixture } from "./helpers.js";
 const orders = () => TCGB.readPage(fixture()).orders;
 const header = (csv) => csv.split("\n")[0];
 
+// rowsOf parses what ordersCSV writes: quoted fields, doubled quotes, LF.
+function rowsOf(csv) {
+  return csv.trimEnd().split("\n").map((line) => [...line.matchAll(/("(?:[^"]|"")*"|[^,]*)(?:,|$)/g)].slice(0, -1).map((m) => m[1].replace(/^"|"$/g, "").replace(/""/g, '"')));
+}
+
 describe("the orders file", () => {
   test("starts with the columns go-mtgban's tool and ck-banner share", () => {
     expect(header(TCGB.ordersCSV(orders()))).toBe(
-      "Order ID,Order Date,Amount,Kind,Seller,Quantity,Subtotal,Shipping,Sales Tax,Total,Refunded"
+      "Order ID,Order Date,Amount,Kind,Seller,Quantity,Subtotal,Shipping,Sales Tax,Refunded,Total"
     );
   });
 
-  test("one row per order, the amount net of a refund", () => {
+  test("reads as a sum: Subtotal, Shipping, Sales Tax and the refund, negative, make Total", () => {
     const all = orders();
-    const rows = TCGB.ordersCSV(all).trimEnd().split("\n").slice(1);
+    const [head, ...rows] = rowsOf(TCGB.ordersCSV(all));
     expect(rows.length).toBe(10);
+    const at = (row, name) => row[head.indexOf(name)];
+    const cents = (text) => (text === "" ? 0 : (text.startsWith("-") ? -1 : 1) * TCGB.cents(text.replace(/^-/, "")));
+    for (const row of rows) {
+      const sum = ["Subtotal", "Shipping", "Sales Tax", "Refunded"].reduce((n, name) => n + cents(at(row, name)), 0);
+      expect([at(row, "Order ID"), sum]).toEqual([at(row, "Order ID"), cents(at(row, "Total"))]);
+      expect(at(row, "Amount")).toBe(at(row, "Total"));
+    }
     const refunded = all.find((o) => o.refunded);
-    const row = rows.find((r) => r.startsWith(refunded.id + ","));
-    const q = (cents) => '"' + TCGB.dollars(cents) + '"';
-    const field = (cents) => (cents >= 100000 ? q(cents) : TCGB.dollars(cents));
-    expect(row).toContain("," + field(refunded.summary.total) + ",");
-    expect(row.endsWith("," + field(refunded.refunded))).toBe(true);
-    expect(row).toContain('2026",' + field(refunded.summary.total - refunded.refunded) + ",Direct");
-  });
-});
-
-describe("the items file", () => {
-  test("names its order column so docparse does not take it for a variant", () => {
-    const columns = header(TCGB.itemsCSV(orders())).split(",");
-    expect(columns).toEqual([
-      "TCGplayer Product ID", "Name", "Edition", "Foil", "Condition", "Quantity", "Price",
-      "Order", "Order Date", "Seller", "Game", "Language",
-    ]);
-    // docparse reads a header holding "number" as the card's variant, and
-    // one of exactly "tcgplayer id" as a SKU that wipes the product id.
-    expect(columns.filter((c) => /number/i.test(c) || c.toLowerCase() === "tcgplayer id")).toEqual([]);
-  });
-
-  test("one row per line", () => {
-    expect(TCGB.itemsCSV(orders()).trimEnd().split("\n").length).toBe(1 + 185);
+    const row = rows.find((r) => r[0] === refunded.id);
+    expect(at(row, "Refunded")).toBe("-" + TCGB.dollars(refunded.refunded));
+    expect(at(row, "Total")).toBe(TCGB.dollars(refunded.summary.total - refunded.refunded));
+    expect(at(rows.find((r) => r[0] !== refunded.id), "Refunded")).toBe("");
   });
 });
 
@@ -57,12 +50,9 @@ describe("free text", () => {
     const seller = all.find((o) => o.kind === "Seller");
     seller.seller = "=1+1";
     const direct = all[0];
-    direct.lines[0] = { ...direct.lines[0], seller: "@SUM(A1)", name: "+2 Mace", edition: "-Set" };
+    direct.lines[0] = { ...direct.lines[0], name: "+2 Mace", edition: "-Set" };
     const row = (csv, id) => csv.split("\n").find((r) => r.startsWith(id + ","));
     expect(row(TCGB.ordersCSV(all), seller.id)).toContain(",'=1+1,");
-    const items = TCGB.itemsCSV(all).split("\n");
-    expect(items[1]).toStartWith("4842,'+2 Mace,'-Set,");
-    expect(items[1]).toContain(",'@SUM(A1),");
     // mtgban reads the cards file, and reads it as written.
     expect(TCGB.cardsCSV([direct.lines[0]]).split("\n")[1]).toStartWith("4842,+2 Mace,-Set,");
   });

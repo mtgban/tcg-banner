@@ -33,7 +33,8 @@ globalThis.TCGB = globalThis.TCGB || {};
   // One row per order. The first three are the columns go-mtgban's
   // tcgHistory wrote and ck-banner's history file shares, under the same
   // names and meaning the same thing; Amount is what was paid, net of
-  // refunds.
+  // refunds. The money then reads left to right as a sum: Subtotal,
+  // Shipping, Sales Tax and the refunds, as a negative, come to Total.
   var ORDERS = [
     ["Order ID", function (o) { return o.id; }],
     ["Order Date", function (o) { return o.dateText; }],
@@ -44,8 +45,8 @@ globalThis.TCGB = globalThis.TCGB || {};
     ["Subtotal", function (o) { return TCGB.dollars(o.summary.subtotal); }],
     ["Shipping", function (o) { return TCGB.dollars(o.summary.shipping); }],
     ["Sales Tax", function (o) { return TCGB.dollars(o.summary.tax); }],
-    ["Total", function (o) { return TCGB.dollars(o.summary.total); }],
-    ["Refunded", function (o) { return o.refunded ? TCGB.dollars(o.refunded) : ""; }],
+    ["Refunded", function (o) { return o.refunded ? TCGB.dollars(-o.refunded) : ""; }],
+    ["Total", function (o) { return TCGB.dollars(o.amount); }],
   ];
 
   // The columns mtgban's uploader reads, each traced through docparse's
@@ -62,35 +63,8 @@ globalThis.TCGB = globalThis.TCGB || {};
     ["Price", function (l) { return TCGB.decimal(l.each); }],
   ];
 
-  // The items file adds where each line came from. "Order", not "Order
-  // Number": docparse reads a header holding "number" as the card's variant.
-  // The items file goes to a spreadsheet, so its free text is guarded; the
-  // cards file goes to mtgban alone and is written as read.
-  var ITEMS = CARDS.map(function (c) {
-    return c[0] === "Name" || c[0] === "Edition"
-      ? [c[0], function (l) { return text(c[1](l)); }]
-      : c;
-  }).concat([
-    ["Order", function (l) { return l.order.id; }],
-    ["Order Date", function (l) { return l.order.dateText; }],
-    ["Seller", function (l) { return text(l.seller || l.order.seller); }],
-    ["Game", function (l) { return l.game; }],
-    ["Language", function (l) { return l.language; }],
-  ]);
-
   TCGB.ordersCSV = function (orders) {
     return table(ORDERS, orders);
-  };
-
-  TCGB.itemsCSV = function (orders) {
-    var lines = [];
-    for (var i = 0; i < orders.length; i++) {
-      for (var j = 0; j < orders[i].lines.length; j++) {
-        var l = Object.assign({ order: orders[i] }, orders[i].lines[j]);
-        lines.push(l);
-      }
-    }
-    return table(ITEMS, lines);
   };
 
   // cardsCSV is what goes to mtgban: the uploader's columns alone.

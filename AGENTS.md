@@ -37,7 +37,7 @@ by `scripts/cut-fixtures.mjs`, never by editing a saved page down;
 manifest.json    MV3; one host, no permissions, and a test keeps it that way
 icons/           the BAN stroopwafel, shared with ck-banner and cm-banner
 src/money.js     "$1,234.56" to cents and back; "November 09, 2026" to parts
-src/csv.js       the orders, items and cards CSVs: their columns and Go's quoting
+src/csv.js       the orders and cards CSVs: their columns and Go's quoting
 src/read.js      a page: the filter, the list's heading, every order and line
 src/net.js       one request at a time: a page, or the filter POST
 src/walk.js      a year: set it, read every page, put the visitor's range back

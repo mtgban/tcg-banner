@@ -160,7 +160,7 @@ globalThis.TCGB = globalThis.TCGB || {};
   // ---- The panel ----
 
   var panel = TCGB.panel();
-  var HINT = "Save a year's orders, or every card in them, as CSV";
+  var HINT = "Save a year's orders as CSV";
   panel.hint(HINT);
 
   var year = document.createElement("select");
@@ -175,23 +175,19 @@ globalThis.TCGB = globalThis.TCGB || {};
     year.value = filter.range;
   }
 
-  function goButton(text, kind) {
-    var button = document.createElement("button");
-    button.type = "button";
-    button.className = "tcg-banner-go";
-    button.textContent = text;
-    button.addEventListener("click", function () {
-      save(kind);
-    });
-    return button;
-  }
+  var go = document.createElement("button");
+  go.type = "button";
+  go.className = "tcg-banner-go";
+  go.textContent = "Download CSV";
+  go.addEventListener("click", function () {
+    save();
+  });
 
   panel.actions.appendChild(year);
-  panel.actions.appendChild(goButton("Orders", "orders"));
-  panel.actions.appendChild(goButton("Items", "items"));
+  panel.actions.appendChild(go);
 
-  // Walks done on this page, by year, so the second file of a year costs
-  // no second walk.
+  // Walks done on this page, by year, so asking for a year again costs no
+  // second walk.
   var walked = {};
   var stopped = false;
 
@@ -206,14 +202,14 @@ globalThis.TCGB = globalThis.TCGB || {};
     }
   });
 
-  function write(kind, chosen, result) {
-    var name = "tcg-" + kind + "-" + chosen + ".csv";
+  function write(chosen, result) {
+    var name = "tcg-orders-" + chosen + ".csv";
     if (!result.orders.length) {
       panel.word("no orders");
       panel.fail("No orders were placed in " + chosen + (result.pending ? " that have shipped" : ""));
       return;
     }
-    TCGB.download(kind === "orders" ? TCGB.ordersCSV(result.orders) : TCGB.itemsCSV(result.orders), name);
+    TCGB.download(TCGB.ordersCSV(result.orders), name);
     panel.word(plural(result.orders.length, "order", "orders"));
     panel.mark("done");
     var notes = ["Saved " + name + " from " + plural(result.pages, "page", "pages")];
@@ -226,10 +222,10 @@ globalThis.TCGB = globalThis.TCGB || {};
     panel.recap(notes.join("\n"));
   }
 
-  function save(kind) {
+  function save() {
     var chosen = year.value;
     if (walked[chosen]) {
-      write(kind, chosen, walked[chosen]);
+      write(chosen, walked[chosen]);
       return;
     }
     stopped = false;
@@ -251,7 +247,7 @@ globalThis.TCGB = globalThis.TCGB || {};
         panel.busy(false);
         holdSends(false);
         walked[chosen] = result;
-        write(kind, chosen, result);
+        write(chosen, result);
       },
       function (err) {
         panel.busy(false);

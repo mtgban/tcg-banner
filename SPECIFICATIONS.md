@@ -168,7 +168,7 @@ clicked order is on the page, so it is inside that range.
 
 ## 4. The year walk
 
-The panel offers the years `#DateRange` lists. *Orders* or *Items* walks the
+The panel offers the years `#DateRange` lists. *Download CSV* walks the
 chosen year:
 
 1. **Read the state fresh**: GET page 1 and take the range and search the
@@ -203,18 +203,17 @@ A tab closed mid-walk leaves the session on the year, visible in the page's
 own dropdown. That is the one side effect, and the same POST the dropdown
 makes.
 
-A finished walk is kept for the page's life, so the year's second file
-costs no second walk.
+A finished walk is kept for the page's life, so asking for the same year
+again costs no second walk.
 
 ## 5. The CSVs
 
 Bytes as Go's `csv.Writer` writes them: quoted only when a value holds a
 comma, a quote or a line break, quotes doubled, every row ending in LF.
-These two files are for a spreadsheet, so their free text (a seller, a
-card's name, its set) is written with a leading `'` when it starts with
-`=`, `+`, `-`, `@`, a tab or a CR, which a spreadsheet would run as a
-formula; a seller names their own store. The cards file of section 6 goes
-to mtgban alone and is written as read.
+The orders file is for a spreadsheet, so a seller's name is written with a
+leading `'` when it starts with `=`, `+`, `-`, `@`, a tab or a CR, which a
+spreadsheet would run as a formula; a seller names their own store. The
+cards file of section 6 goes to mtgban alone and is written as read.
 
 **`tcg-orders-<year>.csv`**, one row per order, in TCGplayer's order. The
 first three are the columns go-mtgban's `tcgHistory` wrote and ck-banner's
@@ -227,13 +226,12 @@ history file shares, under the same names and meaning:
 | `Amount` | `Total:` minus every refund, `$23.13` |
 | `Kind` | `Seller` or `Direct` |
 | `Seller` | the seller, or `TCGplayer Direct` |
-| `Quantity`, `Subtotal`, `Shipping`, `Sales Tax`, `Total` | the summary |
-| `Refunded` | the refunds' sum, or empty |
+| `Quantity`, `Subtotal`, `Shipping`, `Sales Tax` | the summary |
+| `Refunded` | the refunds' sum as a negative amount, `-$1.02`, or empty |
+| `Total` | `Total:` with the refunds taken off, the same as `Amount` |
 
-**`tcg-items-<year>.csv`**, one row per line: the seven columns of section
-6, then `Order`, `Order Date`, `Seller` (the line's own on a Direct order),
-`Game` and `Language`. A sealed line's condition is `Sealed`. A line not read whole is
-written with what was read.
+The money reads left to right as a sum: `Subtotal`, `Shipping`, `Sales Tax`
+and `Refunded` come to `Total`.
 
 ## 6. Send to BAN
 
@@ -290,7 +288,7 @@ lands in whichever mode, uploader or buylist, the reader last used.
 ## 7. The panel
 
 ck-banner's panel: the stroopwafel and "TCG BANner", one word, a mark, a
-drawn tooltip, one row (the year, *Orders*, *Items*). A fixed width; nothing
+drawn tooltip, one row (the year, *Download CSV*). A fixed width; nothing
 is written under the row and nothing carries a `title`. While a walk runs the
 word is the page being read (`page 3 of 22`), every control is disabled,
 Escape stops it, and the page asks before it is left. Done, the word counts

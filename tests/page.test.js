@@ -10,8 +10,8 @@ describe("the panel", () => {
     expect(years[0]).toBe("2026");
     expect(years.at(-1)).toBe("2016");
     expect(years).not.toContain("Last 30 Days");
-    expect(!!p.button("Orders")).toBe(true);
-    expect(!!p.button("Items")).toBe(true);
+    expect(p.panel.querySelectorAll(".tcg-banner-go").length).toBe(1);
+    expect(!!p.button("Download CSV")).toBe(true);
     expect(p.below()).toBe(0);
     expect(p.titled()).toBe(0);
   });
@@ -28,7 +28,7 @@ describe("the panel", () => {
     }
     const p = mount({ url: "https://store.tcgplayer.com//myaccount/orderhistory", totals: { 2025: 23 } });
     p.choose("2025");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     await p.idle();
     expect(p.word()).toBe("23 orders");
   });
@@ -47,11 +47,11 @@ describe("the panel", () => {
   });
 });
 
-describe("Orders and Items", () => {
-  test("Orders walks the year and saves its orders", async () => {
+describe("Download CSV", () => {
+  test("walks the year and saves its orders", async () => {
     const p = mount({ totals: { 2025: 23 } });
     p.choose("2025");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     expect(p.busy()).toBe(true);
     await p.idle();
     const file = await p.file();
@@ -63,24 +63,22 @@ describe("Orders and Items", () => {
     expect(p.session.state).toEqual({ range: "Last 30 Days", search: "" });
   });
 
-  test("Items after Orders needs no second walk", async () => {
+  test("asking for a year again needs no second walk", async () => {
     const p = mount({ totals: { 2025: 23 } });
     p.choose("2025");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     await p.idle();
     const asked = p.session.asked.length;
-    p.button("Items").click();
+    p.button("Download CSV").click();
     await p.idle();
     expect(p.session.asked.length).toBe(asked);
-    const file = await p.file(1);
-    expect(file.name).toBe("tcg-items-2025.csv");
-    expect(file.text.split("\n")[0]).toStartWith("TCGplayer Product ID,");
+    expect((await p.file(1)).name).toBe("tcg-orders-2025.csv");
   });
 
   test("a year with no orders saves nothing and says so", async () => {
     const p = mount({ totals: { 2016: 0 } });
     p.choose("2016");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     await p.idle();
     expect(p.saved.length).toBe(0);
     expect(p.failed()).toBe(true);
@@ -93,7 +91,7 @@ describe("Orders and Items", () => {
       change: (html, n, state) => (state.range === "2025" && n === 2 ? html.replace("Subtotal:", "Discount:") : html),
     });
     p.choose("2025");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     await p.idle();
     expect(p.saved.length).toBe(0);
     expect(p.failed()).toBe(true);
@@ -104,7 +102,7 @@ describe("Orders and Items", () => {
   test("Escape stops the walk and keeps nothing", async () => {
     const p = mount({ totals: { 2025: 23 } });
     p.choose("2025");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     p.escape();
     await p.idle();
     expect(p.saved.length).toBe(0);
@@ -115,7 +113,7 @@ describe("Orders and Items", () => {
   test("the page asks before it is left mid-walk", async () => {
     const p = mount({ totals: { 2025: 23 } });
     p.choose("2025");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     const event = new p.window.Event("beforeunload", { cancelable: true });
     p.window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
@@ -201,7 +199,7 @@ describe("Send to BAN", () => {
   test("waits while a walk runs, which owns the panel", async () => {
     const p = mount({ totals: { 2025: 23 } });
     p.choose("2025");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     const send = p.document.querySelector("button.tcg-banner-send");
     expect(send.disabled).toBe(true);
     send.click();
@@ -221,7 +219,7 @@ describe("Send to BAN", () => {
     });
     p.document.querySelector("button.tcg-banner-send").click();
     p.choose("2025");
-    p.button("Orders").click();
+    p.button("Download CSV").click();
     await new Promise((done) => setTimeout(done, 20));
     const during = p.word();
     expect(during).toBe("page 2 of 3");
