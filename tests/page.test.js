@@ -129,6 +129,17 @@ describe("Download CSV", () => {
     expect((await p.file(1)).name).toBe("tcg-orders-2025.csv");
   });
 
+  test("a year asked for again does not repeat its walk's put-back note", async () => {
+    const p = mount({ totals: { 2025: 3 }, failPost: (range) => range === "Last 30 Days" });
+    p.choose("2025");
+    p.button("Download CSV").click();
+    await p.idle();
+    expect(p.tip()).toContain("The order list was left on 2025");
+    p.button("Download CSV").click();
+    await p.idle();
+    expect(p.tip()).toBe("Saved tcg-orders-2025.csv from 1 page");
+  });
+
   test("a year with no orders saves nothing and says so", async () => {
     const p = mount({ totals: { 2016: 0 } });
     p.choose("2016");

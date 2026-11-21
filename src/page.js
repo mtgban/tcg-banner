@@ -342,7 +342,9 @@ globalThis.TCGB = globalThis.TCGB || {};
     function save() {
       var chosen = year.value;
       if (walked[chosen]) {
-        write(chosen, walked[chosen]);
+        // Kept orders, and no request: a put-back note was about the walk
+        // that read them, not this.
+        write(chosen, Object.assign({}, walked[chosen], { restore: "" }));
         return;
       }
       stopped = false;
