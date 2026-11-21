@@ -313,5 +313,12 @@
     "find": "var back = original.range + (original.search ? ' and search \"' + original.search + '\"' : \"\");",
     "replace": "var back = original.range;",
     "expectFailing": "a search that cannot be put back is named with its range"
+  },
+  {
+    "guard": "a kept year drops its walk's put-back note",
+    "file": "src/page.js",
+    "find": "write(chosen, Object.assign({}, walked[chosen], { restore: \"\" }));",
+    "replace": "write(chosen, walked[chosen]);",
+    "expectFailing": "a year asked for again does not repeat its walk's put-back note"
   }
 ]
