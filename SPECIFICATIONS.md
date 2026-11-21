@@ -273,7 +273,11 @@ extension-> { type: "mtgban-handoff-rows", csv, rows, source: location.href }
 ```
 
 The extension answers only the tab it opened, at `mtgban.com` or a
-subdomain over https, and posts to the origin that spoke. One handoff waits
+subdomain over https, and posts to the origin that spoke. Until that tab
+speaks the word is `sending`: mtgban's page stays silent while the reader
+is not signed in there or cannot upload, and says why in its own tab. A tab
+closed before it spoke is noticed when this one gets focus back, with no
+timer, and the send fails with "The upload page was closed; try again". One handoff waits
 at a time: a second closes the first one's tab, which would otherwise wait
 for rows that are not coming. A send goes out while a year walk runs too,
 and leaves the panel to the walk: one that went says nothing, since the BAN

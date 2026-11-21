@@ -250,5 +250,19 @@
     "find": "      if (l.problem) {\n        unread++;\n      } else if (!TCGB.handoffURL(l.game)) {",
     "replace": "      if (false) {\n        unread++;\n      } else if (!TCGB.handoffURL(l.game)) {",
     "expectFailing": "a custom listing is counted as not read whole, not as another game"
+  },
+  {
+    "guard": "a closed BAN tab is noticed on focus",
+    "file": "src/handoff.js",
+    "find": "    window.addEventListener(\"focus\", onFocus);\n",
+    "replace": "",
+    "expectFailing": "a BAN tab closed before it listened is noticed on coming back"
+  },
+  {
+    "guard": "focus with the BAN tab open does not end the send",
+    "file": "src/handoff.js",
+    "find": "    function onFocus() {\n      if (opened.closed) {",
+    "replace": "    function onFocus() {\n      if (true) {",
+    "expectFailing": "says it is sending until mtgban's page listens"
   }
 ]
