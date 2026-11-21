@@ -5,12 +5,14 @@ import { mount } from "./panel.js";
 import { TCGB, docOf, pageHTML } from "./helpers.js";
 
 describe("the panel", () => {
-  test("offers the years TCGplayer lists, and nothing under its buttons", () => {
+  test("offers TCGplayer's ranges, the last days then the years, and nothing under its buttons", () => {
     const p = mount();
-    const years = [...p.year().options].map((o) => o.value);
-    expect(years[0]).toBe("2026");
-    expect(years.at(-1)).toBe("2016");
-    expect(years).not.toContain("Last 30 Days");
+    const options = [...p.year().options];
+    expect(options.map((o) => o.value).slice(0, 4)).toEqual(["Last 30 Days", "Last 90 Days", "Last 120 Days", "2026"]);
+    expect(options.map((o) => o.textContent).slice(0, 4)).toEqual(["30 days", "90 days", "120 days", "2026"]);
+    expect(options.at(-1).value).toBe("2016");
+    // The range the page shows.
+    expect(p.year().value).toBe("Last 30 Days");
     expect(p.panel.querySelectorAll(".tcg-banner-go").length).toBe(1);
     expect(!!p.button("Download CSV")).toBe(true);
     expect(p.below()).toBe(0);
@@ -22,7 +24,7 @@ describe("the panel", () => {
     expect(p.word()).toBe("ready");
     expect(p.done()).toBe(true);
     expect(p.panel.querySelector(".tcg-banner-sep").hidden).toBe(false);
-    expect(p.tip()).toBe("Save a year's orders as CSV");
+    expect(p.tip()).toBe("Save a range of orders as CSV");
     expect(p.panel.querySelector(".tcg-banner-label").textContent).toBe("TCG BANner - ready✓");
     // A panel given no word shows no dash either.
     expect(p.window.TCGB.panel().root.querySelector(".tcg-banner-sep").hidden).toBe(true);
@@ -36,7 +38,7 @@ describe("the panel", () => {
     p.choose("2024");
     expect(p.word()).toBe("ready");
     expect(p.done()).toBe(true);
-    expect(p.tip()).toBe("Save a year's orders as CSV");
+    expect(p.tip()).toBe("Save a range of orders as CSV");
   });
 
   test("picks the year the page already shows", () => {
@@ -84,6 +86,35 @@ describe("Download CSV", () => {
     expect(p.done()).toBe(true);
     expect(p.tip()).toContain("Saved tcg-orders-2025.csv from 3 pages");
     expect(p.session.state).toEqual({ range: "Last 30 Days", search: "" });
+  });
+
+  test("walks the last days and names the file for the day it was read", async () => {
+    const p = mount({ totals: { "Last 90 Days": 14 } });
+    p.choose("Last 90 Days");
+    p.button("Download CSV").click();
+    await p.idle();
+    const file = await p.file();
+    expect(file.name).toMatch(/^tcg-orders-last-90-days-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(file.text.trimEnd().split("\n").length).toBe(1 + 14);
+    expect(p.word()).toBe("14 orders");
+    expect(p.session.state).toEqual({ range: "Last 30 Days", search: "" });
+  });
+
+  test("the last days are walked again each time, as they move on", async () => {
+    const p = mount();
+    p.button("Download CSV").click();
+    await p.idle();
+    const asked = p.session.asked.length;
+    p.button("Download CSV").click();
+    await p.idle();
+    expect(p.session.asked.length).toBeGreaterThan(asked);
+  });
+
+  test("no orders in the last days says so in TCGplayer's words", async () => {
+    const p = mount({ totals: { "Last 30 Days": 0 } });
+    p.button("Download CSV").click();
+    await p.idle();
+    expect(p.tip()).toBe("No orders were placed in the last 30 days");
   });
 
   test("asking for a year again needs no second walk", async () => {

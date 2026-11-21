@@ -63,9 +63,9 @@
     "expectFailing": "a Cloudflare challenge is told apart from an ordinary refusal"
   },
   {
-    "guard": "every page must name the year asked for",
+    "guard": "every page must name the range asked for",
     "file": "src/walk.js",
-    "find": "if (l.empty || l.placed !== TCGB.placedIn(year)) {",
+    "find": "if (l.empty || l.placed !== TCGB.placedIn(range)) {",
     "replace": "if (l.empty) {",
     "expectFailing": "a heading naming another range refuses the walk"
   },
@@ -86,7 +86,7 @@
   {
     "guard": "an order from another year refuses the walk",
     "file": "src/walk.js",
-    "find": "if (String(o.date.year) !== year) {",
+    "find": "if (year && String(o.date.year) !== year) {",
     "replace": "if (false) {",
     "expectFailing": "an order from another year refuses the walk"
   },
@@ -292,5 +292,19 @@
     "find": "      stopWaiting();\n      if (opened.closed) {\n        done(TCGB.CLOSED);",
     "replace": "      stopWaiting();\n      if (false) {\n        done(TCGB.CLOSED);",
     "expectFailing": "a tab that says it is listening after it was closed gets no cards"
+  },
+  {
+    "guard": "a relative range is not checked against a year",
+    "file": "src/walk.js",
+    "find": "if (year && String(o.date.year) !== year) {",
+    "replace": "if (String(o.date.year) !== year) {",
+    "expectFailing": "walks the last days as it walks a year, without the year's date check"
+  },
+  {
+    "guard": "a relative range is not kept for a second Download",
+    "file": "src/page.js",
+    "find": "          if (isYear(chosen)) {\n            walked[chosen] = result;",
+    "replace": "          if (true) {\n            walked[chosen] = result;",
+    "expectFailing": "the last days are walked again each time, as they move on"
   }
 ]

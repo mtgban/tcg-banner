@@ -1,8 +1,9 @@
-// Reads every order placed in one year.
+// Reads every order placed in one range: a year, or the last 30, 90 or 120
+// days.
 //
 // TCGplayer filters the history by a range held in the session, so the walk
-// sets the year itself, reads every page checking each one still names that
-// year, and then puts back the range and search the visitor had. That is
+// sets the range itself, reads every page checking each one still names
+// that range, and then puts back the range and search the visitor had. That is
 // the step go-mtgban's tcgHistory could not take: it read whatever range
 // the session happened to hold. SPECIFICATIONS.md section 4.
 
@@ -22,7 +23,7 @@ globalThis.TCGB = globalThis.TCGB || {};
     throw new Error(message);
   }
 
-  // walkYear answers with {orders, pending, pages, restore}: the year's
+  // walkRange answers with {orders, pending, pages, restore}: the range's
   // orders in TCGplayer's order, how many were pending and left out, how
   // many pages were read, and "" or why the visitor's range could not be
   // put back. It rejects when the list cannot be read whole; the error then
@@ -31,7 +32,11 @@ globalThis.TCGB = globalThis.TCGB || {};
   // hooks.step(n, of) says which page is being read; hooks.stopped() is
   // asked before each request and stops the walk when it answers true;
   // hooks.waiting(ms) says the range will be put back after a pause.
-  TCGB.walkYear = function (year, hooks) {
+  TCGB.walkRange = function (range, hooks) {
+    // A year's orders are each checked to be dated in it. A relative range
+    // has no such check: where TCGplayer puts its day boundary is not
+    // known, so it rests on the heading and the counts.
+    var year = /^\d{4}$/.test(range) ? range : "";
     var token = "";
     var original = null;
     var requests = 0;
@@ -69,13 +74,13 @@ globalThis.TCGB = globalThis.TCGB || {};
     function take(page, n) {
       var f = page.filter;
       var l = page.list;
-      if (f.range !== year || f.search !== "") {
+      if (f.range !== range || f.search !== "") {
         refuse(TCGB.MOVED);
       }
       if (n === 1 && l.empty === "none") {
         return;
       }
-      if (l.empty || l.placed !== TCGB.placedIn(year)) {
+      if (l.empty || l.placed !== TCGB.placedIn(range)) {
         refuse(TCGB.MOVED);
       }
       if (n === 1) {
@@ -100,7 +105,7 @@ globalThis.TCGB = globalThis.TCGB || {};
           refuse(TCGB.MOVED);
         }
         seen[o.id] = true;
-        if (String(o.date.year) !== year) {
+        if (year && String(o.date.year) !== year) {
           refuse("Order " + o.id + " is not from " + year);
         }
         if (o.pending) {
@@ -121,7 +126,7 @@ globalThis.TCGB = globalThis.TCGB || {};
       });
     }
 
-    var left = "The order list was left on " + year + "; reload the page";
+    var left = "The order list was left on " + range + "; reload the page";
 
     // restore puts back the visitor's range and search, then reads page 1
     // to see that it took. It answers "" or why it did not.
@@ -150,12 +155,12 @@ globalThis.TCGB = globalThis.TCGB || {};
     return read(1)
       .then(function (page) {
         original = { range: page.filter.range, search: page.filter.search };
-        if (page.filter.years.indexOf(year) < 0) {
-          refuse("TCGplayer does not list " + year);
+        if (page.filter.ranges.indexOf(range) < 0) {
+          refuse("TCGplayer does not list " + range);
         }
         started = true;
         return ask(function () {
-          return TCGB.setFilter(token, year, "", true);
+          return TCGB.setFilter(token, range, "", true);
         });
       })
       .then(function () {
@@ -181,7 +186,7 @@ globalThis.TCGB = globalThis.TCGB || {};
           if (err.message === TCGB.CHALLENGE) {
             // Anything sent now meets the same check, which is the
             // visitor's to pass.
-            err.restore = "The order list was left on " + year + "; reload, pass the check, then pick your range again";
+            err.restore = "The order list was left on " + range + "; reload, pass the check, then pick your range again";
             throw err;
           }
           var pause = Promise.resolve();
