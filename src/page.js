@@ -47,7 +47,12 @@ globalThis.TCGB = globalThis.TCGB || {};
     button.addEventListener("click", function () {
       search(order.id);
     });
-    order.numberNode.replaceWith(button);
+    // The number and its Send to BAN keep to one line: the header's column
+    // is just wide enough for a seller order's number alone.
+    var line = document.createElement("span");
+    line.className = "tcg-banner-number";
+    line.appendChild(button);
+    order.numberNode.replaceWith(line);
     return button;
   }
 

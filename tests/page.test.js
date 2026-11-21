@@ -156,6 +156,10 @@ describe("Send to BAN", () => {
     expect(send.textContent).toBe("");
     expect(send.getAttribute("aria-label")).toBe("Send to BAN");
     expect(send.previousElementSibling.className).toBe("tcg-banner-order");
+    // Both in one span that does not wrap, so the icon never drops under a
+    // long number.
+    expect(send.parentNode.className).toBe("tcg-banner-number");
+    expect(p.document.querySelectorAll("span.tcg-banner-number").length).toBe(10);
   });
 
   test("an order with nothing to send gets none", () => {
