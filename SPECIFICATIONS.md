@@ -258,9 +258,10 @@ extension-> { type: "mtgban-handoff-rows", csv, rows, source: location.href }
 The extension answers only the tab it opened, at `mtgban.com` or a
 subdomain over https, and posts to the origin that spoke. One handoff waits
 at a time: a second closes the first one's tab, which would otherwise wait
-for rows that are not coming. While a year walk runs, every Send to BAN is
-disabled, since the walk owns the panel, and a send answered during one
-leaves the panel to it: the BAN tab already shows what it took.
+for rows that are not coming. A send goes out while a year walk runs too,
+and leaves the panel to the walk: one that went says nothing, since the BAN
+tab shows what it took, and one that failed is added to the walk's tooltip
+when the walk ends.
 
 The CSV holds only what mtgban's `internal/docparse` `ParseHeader` reads:
 
@@ -303,7 +304,7 @@ that order is read whole), the row is that order's instead: *Download CSV*
 saves its cards with no request, and *Send to BAN* does what the icon beside
 its number does, disabled when none of its lines can be sent. A fixed width; nothing
 is written under the row and nothing carries a `title`. While a walk runs the
-word is the page being read (`page 3 of 22`), every control is disabled,
+word is the page being read (`page 3 of 22`), every control in the row is disabled,
 Escape stops it, and the page asks before it is left. Done, the word counts
 the orders and a tick stands beside it; the tooltip names the file, the
 pages read, pending orders left out, and a range that could not be put back.

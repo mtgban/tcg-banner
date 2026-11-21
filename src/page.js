@@ -112,29 +112,37 @@ globalThis.TCGB = globalThis.TCGB || {};
     return notes;
   }
 
+  // aside is what a send that failed during a walk had to say, for the
+  // walk's tooltip once it ends.
+  var aside = "";
+
   // send hands an order's sendable cards to mtgban and says on the panel
-  // what went. It runs straight from a click: window.open needs one.
+  // what went. It runs straight from a click: window.open needs one. A walk
+  // running meanwhile keeps the panel.
   function send(order, cards) {
-    // A walk owns the panel until it ends.
-    if (panel.working()) {
-      return;
-    }
     var count = cards.lines.reduce(function (n, l) {
       return n + l.qty;
     }, 0);
-    panel.clear();
+    if (!panel.working()) {
+      panel.clear();
+    }
     TCGB.handOff("magic", TCGB.cardsCSV(cards.lines), cards.lines.length, function (error) {
-      // The later send speaks for itself, and a walk started since owns
-      // the panel: its count and its file matter more, and the BAN tab
-      // already shows what it took.
-      if (error === TCGB.REPLACED || panel.working()) {
+      // The later send speaks for itself. During a walk a send that went
+      // says nothing, since the BAN tab shows what it took, and one that
+      // failed waits for the walk to end.
+      if (error === TCGB.REPLACED) {
+        return;
+      }
+      if (panel.working()) {
+        aside = error || aside;
         return;
       }
       if (error) {
         panel.fail(error);
         return;
       }
-      panel.word("");
+      panel.word("sent");
+      panel.mark("done");
       panel.recap(["Sent " + plural(count, "card", "cards") + " of " + order.id].concat(left(order, cards)).join("\n"));
     });
   }
@@ -155,14 +163,6 @@ globalThis.TCGB = globalThis.TCGB || {};
       send(order, cards);
     });
     after.after(button);
-  }
-
-  // holdSends disables every Send to BAN while a walk runs.
-  function holdSends(on) {
-    var sends = document.querySelectorAll("button.tcg-banner-send");
-    for (var i = 0; i < sends.length; i++) {
-      sends[i].disabled = on;
-    }
   }
 
   // ---- Every order on the page ----
@@ -279,7 +279,7 @@ globalThis.TCGB = globalThis.TCGB || {};
       var name = "tcg-orders-" + chosen + ".csv";
       if (!result.orders.length) {
         panel.word("no orders");
-        panel.fail("No orders were placed in " + chosen + (result.pending ? " that have shipped" : ""));
+        panel.fail(["No orders were placed in " + chosen + (result.pending ? " that have shipped" : "")].concat(spoken()).join("\n"));
         return;
       }
       TCGB.download(TCGB.ordersCSV(result.orders), name);
@@ -292,7 +292,15 @@ globalThis.TCGB = globalThis.TCGB || {};
       if (result.restore) {
         notes.push(result.restore);
       }
-      panel.recap(notes.join("\n"));
+      panel.recap(notes.concat(spoken()).join("\n"));
+    }
+
+    // spoken takes what a send failed with during the walk, to be said
+    // once the walk has said its own.
+    function spoken() {
+      var said = aside ? ["Send to BAN: " + aside] : [];
+      aside = "";
+      return said;
     }
 
     function save() {
@@ -304,7 +312,6 @@ globalThis.TCGB = globalThis.TCGB || {};
       stopped = false;
       panel.clear();
       panel.busy(true);
-      holdSends(true);
       TCGB.walkYear(chosen, {
         step: function (n, of) {
           panel.word("page " + n + (of ? " of " + of : ""));
@@ -318,15 +325,13 @@ globalThis.TCGB = globalThis.TCGB || {};
       }).then(
         function (result) {
           panel.busy(false);
-          holdSends(false);
           walked[chosen] = result;
           write(chosen, result);
         },
         function (err) {
           panel.busy(false);
-          holdSends(false);
           panel.word("");
-          panel.fail(err.message + (err.restore ? "\n" + err.restore : ""));
+          panel.fail([err.message].concat(err.restore ? [err.restore] : [], spoken()).join("\n"));
         }
       );
     }

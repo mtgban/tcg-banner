@@ -119,11 +119,11 @@
     "expectFailing": "listens only to mtgban, from the tab it opened"
   },
   {
-    "guard": "Send to BAN is held while a walk runs",
+    "guard": "a send that failed during a walk is said when it ends",
     "file": "src/page.js",
-    "find": "sends[i].disabled = on;",
-    "replace": "sends[i].disabled = false;",
-    "expectFailing": "waits while a walk runs, which owns the panel"
+    "find": "var said = aside ? [\"Send to BAN: \" + aside] : [];",
+    "replace": "var said = [];",
+    "expectFailing": "a send blocked during a walk is said once the walk ends"
   },
   {
     "guard": "a superseded handoff's tab is closed",
@@ -149,8 +149,8 @@
   {
     "guard": "a send's result does not land on a running walk",
     "file": "src/page.js",
-    "find": "if (error === TCGB.REPLACED || panel.working()) {",
-    "replace": "if (error === TCGB.REPLACED) {",
+    "find": "if (panel.working()) {\n        aside = error || aside;",
+    "replace": "if (false) {\n        aside = error || aside;",
     "expectFailing": "a send answered during a walk leaves the walk's panel alone"
   },
   {
