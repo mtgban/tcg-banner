@@ -24,7 +24,7 @@ function source(name) {
 export function mount(options = {}) {
   const session = site(options);
   const window = new Window({
-    url: URL_,
+    url: options.url ?? URL_,
     settings: { disableJavaScriptFileLoading: true, disableCSSFileLoading: true, disableIframePageLoading: true },
   });
   const document = window.document;

@@ -18,7 +18,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://store.tcgplayer.com/myaccount/orderhistory*"
+        "https://store.tcgplayer.com/*"
       ],
       "js": [
         "src/money.js",
