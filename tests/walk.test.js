@@ -209,7 +209,7 @@ describe("refusals", () => {
     TCGB.fetchPage = s.fetchPage;
     const err = await walk("2025").catch((e) => e);
     expect(err.message).toBe(TCGB.CHALLENGE);
-    expect(err.restore).toBe("The order list was left on 2025; reload, pass the check, then pick your range again");
+    expect(err.restore).toBe("The order list was left on 2025; reload, pass the check, then pick Last 30 Days again");
     expect(s.asked.filter((a) => a.startsWith("POST"))).toEqual(["POST 2025||true"]);
     expect(s.state.range).toBe("2025");
   });
@@ -218,8 +218,14 @@ describe("refusals", () => {
     const s = on(site({ totals: { 2025: 3 }, failPost: (range) => range === "Last 30 Days" }));
     const result = await walk("2025");
     expect(result.orders.length).toBe(3);
-    expect(result.restore).toBe("The order list was left on 2025; reload the page");
+    expect(result.restore).toBe("The order list was left on 2025; pick Last 30 Days again");
     expect(s.state.range).toBe("2025");
+  });
+
+  test("a search that cannot be put back is named with its range", async () => {
+    const s = on(site({ range: "2024", search: "Portent", totals: { 2025: 3 }, failPost: (range) => range === "2024" }));
+    const result = await walk("2025");
+    expect(result.restore).toBe('The order list was left on 2025; pick 2024 and search "Portent" again');
   });
 
   test("a restore that did not take says so", async () => {
@@ -228,6 +234,6 @@ describe("refusals", () => {
     s.setFilter = (token, range, search, clear) => (range === "2025" ? set(token, range, search, clear) : Promise.resolve());
     on(s);
     const result = await walk("2025");
-    expect(result.restore).toBe("The order list was left on 2025; reload the page");
+    expect(result.restore).toBe("The order list was left on 2025; pick Last 30 Days again");
   });
 });

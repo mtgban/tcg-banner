@@ -306,5 +306,12 @@
     "find": "          if (isYear(chosen)) {\n            walked[chosen] = result;",
     "replace": "          if (true) {\n            walked[chosen] = result;",
     "expectFailing": "the last days are walked again each time, as they move on"
+  },
+  {
+    "guard": "a lost search is named in the put-back note",
+    "file": "src/walk.js",
+    "find": "var back = original.range + (original.search ? ' and search \"' + original.search + '\"' : \"\");",
+    "replace": "var back = original.range;",
+    "expectFailing": "a search that cannot be put back is named with its range"
   }
 ]

@@ -126,7 +126,13 @@ globalThis.TCGB = globalThis.TCGB || {};
       });
     }
 
-    var left = "The order list was left on " + range + "; reload the page";
+    // left says the list stayed on the range walked, and what to pick to
+    // put back the range and search the visitor had: a reload shows the
+    // walked range again.
+    function left(how) {
+      var back = original.range + (original.search ? ' and search "' + original.search + '"' : "");
+      return "The order list was left on " + range + "; " + how + " " + back + " again";
+    }
 
     // restore puts back the visitor's range and search, then reads page 1
     // to see that it took. It answers "" or why it did not.
@@ -142,12 +148,12 @@ globalThis.TCGB = globalThis.TCGB || {};
         .then(function (doc) {
           var back = TCGB.readFilter(doc);
           if (!back || back.range !== original.range || back.search !== original.search) {
-            return left;
+            return left("pick");
           }
           return "";
         })
         .catch(function () {
-          return left;
+          return left("pick");
         });
     }
 
@@ -186,7 +192,7 @@ globalThis.TCGB = globalThis.TCGB || {};
           if (err.message === TCGB.CHALLENGE) {
             // Anything sent now meets the same check, which is the
             // visitor's to pass.
-            err.restore = "The order list was left on " + range + "; reload, pass the check, then pick your range again";
+            err.restore = left("reload, pass the check, then pick");
             throw err;
           }
           var pause = Promise.resolve();
