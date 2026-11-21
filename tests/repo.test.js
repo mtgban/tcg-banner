@@ -72,6 +72,16 @@ describe("the panel", () => {
   });
 });
 
+describe("the panel's type", () => {
+  test("sets every face property itself, since TCGplayer's body is lighter", () => {
+    const rule = /#tcg-banner \{([^}]*)\}/.exec(read("src/panel.css"))[1];
+    for (const property of ["font-family", "font-size", "font-style", "font-weight", "line-height"]) {
+      expect([property, rule.includes(property + ":")]).toEqual([property, true]);
+    }
+    expect(rule).toContain("font-weight: 400;");
+  });
+});
+
 describe("the order header", () => {
   test("keeps the number and its icon on one line", () => {
     expect(read("src/orders.css")).toMatch(/span\.tcg-banner-number \{\s*white-space: nowrap;/);
