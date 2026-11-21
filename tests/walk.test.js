@@ -1,8 +1,5 @@
-import { test, expect, describe, beforeEach } from "bun:test";
-import { TCGB, site } from "./helpers.js";
-
-const realFetch = TCGB.fetchPage;
-const realSet = TCGB.setFilter;
+import { test, expect, describe, beforeEach, afterEach } from "bun:test";
+import { TCGB, site, restore } from "./helpers.js";
 
 // on points the walk at a fake session and answers with it.
 function on(s) {
@@ -14,9 +11,11 @@ function on(s) {
 beforeEach(() => {
   TCGB.PACE = 0;
   TCGB.BUSY_WAIT = 0;
-  TCGB.fetchPage = realFetch;
-  TCGB.setFilter = realSet;
 });
+
+// The fake session must not outlive the test: net.test.js, run after this
+// file, would be asking it instead of fetch.
+afterEach(restore);
 
 const walk = (year, hooks = {}) => TCGB.walkYear(year, hooks);
 
