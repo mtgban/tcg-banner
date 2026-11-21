@@ -1,6 +1,8 @@
 // The content script on TCGplayer's order history: every order number made
 // a control that searches for it, a Send to BAN beside each order whose
-// cards can be sent, and the panel that saves a year as CSV.
+// cards can be sent, and the panel. The panel saves a year as CSV, or, on a
+// list a search has narrowed to one order, that order's cards, which it
+// can also send to BAN.
 
 globalThis.TCGB = globalThis.TCGB || {};
 
@@ -110,6 +112,33 @@ globalThis.TCGB = globalThis.TCGB || {};
     return notes;
   }
 
+  // send hands an order's sendable cards to mtgban and says on the panel
+  // what went. It runs straight from a click: window.open needs one.
+  function send(order, cards) {
+    // A walk owns the panel until it ends.
+    if (panel.working()) {
+      return;
+    }
+    var count = cards.lines.reduce(function (n, l) {
+      return n + l.qty;
+    }, 0);
+    panel.clear();
+    TCGB.handOff("magic", TCGB.cardsCSV(cards.lines), cards.lines.length, function (error) {
+      // The later send speaks for itself, and a walk started since owns
+      // the panel: its count and its file matter more, and the BAN tab
+      // already shows what it took.
+      if (error === TCGB.REPLACED || panel.working()) {
+        return;
+      }
+      if (error) {
+        panel.fail(error);
+        return;
+      }
+      panel.word("");
+      panel.recap(["Sent " + plural(count, "card", "cards") + " of " + order.id].concat(left(order, cards)).join("\n"));
+    });
+  }
+
   function sendButton(order, after) {
     var cards = sendable(order);
     if (!cards.lines.length) {
@@ -123,28 +152,7 @@ globalThis.TCGB = globalThis.TCGB || {};
     button.setAttribute("aria-label", "Send to BAN");
     button.title = "Send to BAN";
     button.addEventListener("click", function () {
-      // A walk owns the panel until it ends.
-      if (panel.working()) {
-        return;
-      }
-      var count = cards.lines.reduce(function (n, l) {
-        return n + l.qty;
-      }, 0);
-      panel.clear();
-      TCGB.handOff("magic", TCGB.cardsCSV(cards.lines), cards.lines.length, function (error) {
-        // The later send speaks for itself, and a walk started since owns
-        // the panel: its count and its file matter more, and the BAN tab
-        // already shows what it took.
-        if (error === TCGB.REPLACED || panel.working()) {
-          return;
-        }
-        if (error) {
-          panel.fail(error);
-          return;
-        }
-        panel.word("");
-        panel.recap(["Sent " + plural(count, "card", "cards") + " of " + order.id].concat(left(order, cards)).join("\n"));
-      });
+      send(order, cards);
     });
     after.after(button);
   }
@@ -157,119 +165,173 @@ globalThis.TCGB = globalThis.TCGB || {};
     }
   }
 
-  // ---- The panel ----
-
-  var panel = TCGB.panel();
-  var HINT = "Save a year's orders as CSV";
-  panel.hint(HINT);
-
-  var year = document.createElement("select");
-  year.className = "tcg-banner-year";
-  year.setAttribute("aria-label", "Year");
-  for (var y = 0; y < filter.years.length; y++) {
-    var option = document.createElement("option");
-    option.value = option.textContent = filter.years[y];
-    year.appendChild(option);
-  }
-  if (filter.years.indexOf(filter.range) >= 0) {
-    year.value = filter.range;
-  }
-
-  var go = document.createElement("button");
-  go.type = "button";
-  go.className = "tcg-banner-go";
-  go.textContent = "Download CSV";
-  go.addEventListener("click", function () {
-    save();
-  });
-
-  panel.actions.appendChild(year);
-  panel.actions.appendChild(go);
-
-  // Walks done on this page, by year, so asking for a year again costs no
-  // second walk.
-  var walked = {};
-  var stopped = false;
-
-  year.addEventListener("change", function () {
-    panel.word("");
-    panel.clear();
-  });
-
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && panel.working()) {
-      stopped = true;
-    }
-  });
-
-  function write(chosen, result) {
-    var name = "tcg-orders-" + chosen + ".csv";
-    if (!result.orders.length) {
-      panel.word("no orders");
-      panel.fail("No orders were placed in " + chosen + (result.pending ? " that have shipped" : ""));
-      return;
-    }
-    TCGB.download(TCGB.ordersCSV(result.orders), name);
-    panel.word(plural(result.orders.length, "order", "orders"));
-    panel.mark("done");
-    var notes = ["Saved " + name + " from " + plural(result.pages, "page", "pages")];
-    if (result.pending) {
-      notes.push(plural(result.pending, "pending order", "pending orders") + " left out");
-    }
-    if (result.restore) {
-      notes.push(result.restore);
-    }
-    panel.recap(notes.join("\n"));
-  }
-
-  function save() {
-    var chosen = year.value;
-    if (walked[chosen]) {
-      write(chosen, walked[chosen]);
-      return;
-    }
-    stopped = false;
-    panel.clear();
-    panel.busy(true);
-    holdSends(true);
-    TCGB.walkYear(chosen, {
-      step: function (n, of) {
-        panel.word("page " + n + (of ? " of " + of : ""));
-      },
-      stopped: function () {
-        return stopped;
-      },
-      waiting: function (ms) {
-        panel.word("waiting " + Math.round(ms / 1000) + " s");
-      },
-    }).then(
-      function (result) {
-        panel.busy(false);
-        holdSends(false);
-        walked[chosen] = result;
-        write(chosen, result);
-      },
-      function (err) {
-        panel.busy(false);
-        holdSends(false);
-        panel.word("");
-        panel.fail(err.message + (err.restore ? "\n" + err.restore : ""));
-      }
-    );
-  }
-
   // ---- Every order on the page ----
 
+  var orders = [];
   var wraps = document.querySelectorAll("#SellerOrderWidgetWrap .orderWrap");
   for (var i = 0; i < wraps.length; i++) {
     var order = TCGB.readOrder(wraps[i]);
     if (!order.numberNode) {
       continue;
     }
+    orders.push(order);
     var button = orderButton(order);
     if (!order.error) {
       sendButton(order, button);
     }
+  }
+
+  // ---- The panel ----
+
+  var panel = TCGB.panel();
+
+  // single is the order a search has narrowed the list to, read whole, or
+  // null: the panel then offers that order rather than a year.
+  function single() {
+    if (!filter.search || orders.length !== 1 || orders[0].error) {
+      return null;
+    }
+    try {
+      return TCGB.readPage(document).list.total === 1 ? orders[0] : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function goButton(text, act) {
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "tcg-banner-go";
+    button.textContent = text;
+    button.addEventListener("click", act);
+    panel.actions.appendChild(button);
+    return button;
+  }
+
+  // ---- One order: its cards, as a file or to BAN ----
+
+  function orderPanel(one) {
+    var cards = sendable(one);
+    panel.hint(
+      "Save the cards of " + one.id + " as CSV" +
+        (cards.lines.length ? ", or send them to BAN" : "; none of them can go to BAN")
+    );
+
+    goButton("Download CSV", function () {
+      var name = "tcg-order-" + one.id + ".csv";
+      var count = one.lines.reduce(function (n, l) {
+        return n + l.qty;
+      }, 0);
+      TCGB.download(TCGB.orderCSV(one), name);
+      panel.word(plural(count, "card", "cards"));
+      panel.mark("done");
+      panel.recap("Saved " + name);
+    });
+
+    goButton("Send to BAN", function () {
+      send(one, cards);
+    }).disabled = !cards.lines.length;
+  }
+
+  // ---- A year: walked, every order of it in one file ----
+
+  function yearPanel() {
+    panel.hint("Save a year's orders as CSV");
+
+    var year = document.createElement("select");
+    year.className = "tcg-banner-year";
+    year.setAttribute("aria-label", "Year");
+    for (var y = 0; y < filter.years.length; y++) {
+      var option = document.createElement("option");
+      option.value = option.textContent = filter.years[y];
+      year.appendChild(option);
+    }
+    if (filter.years.indexOf(filter.range) >= 0) {
+      year.value = filter.range;
+    }
+    panel.actions.appendChild(year);
+    goButton("Download CSV", function () {
+      save();
+    });
+
+    // Walks done on this page, by year, so asking for a year again costs
+    // no second walk.
+    var walked = {};
+    var stopped = false;
+
+    year.addEventListener("change", function () {
+      panel.word("");
+      panel.clear();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && panel.working()) {
+        stopped = true;
+      }
+    });
+
+    function write(chosen, result) {
+      var name = "tcg-orders-" + chosen + ".csv";
+      if (!result.orders.length) {
+        panel.word("no orders");
+        panel.fail("No orders were placed in " + chosen + (result.pending ? " that have shipped" : ""));
+        return;
+      }
+      TCGB.download(TCGB.ordersCSV(result.orders), name);
+      panel.word(plural(result.orders.length, "order", "orders"));
+      panel.mark("done");
+      var notes = ["Saved " + name + " from " + plural(result.pages, "page", "pages")];
+      if (result.pending) {
+        notes.push(plural(result.pending, "pending order", "pending orders") + " left out");
+      }
+      if (result.restore) {
+        notes.push(result.restore);
+      }
+      panel.recap(notes.join("\n"));
+    }
+
+    function save() {
+      var chosen = year.value;
+      if (walked[chosen]) {
+        write(chosen, walked[chosen]);
+        return;
+      }
+      stopped = false;
+      panel.clear();
+      panel.busy(true);
+      holdSends(true);
+      TCGB.walkYear(chosen, {
+        step: function (n, of) {
+          panel.word("page " + n + (of ? " of " + of : ""));
+        },
+        stopped: function () {
+          return stopped;
+        },
+        waiting: function (ms) {
+          panel.word("waiting " + Math.round(ms / 1000) + " s");
+        },
+      }).then(
+        function (result) {
+          panel.busy(false);
+          holdSends(false);
+          walked[chosen] = result;
+          write(chosen, result);
+        },
+        function (err) {
+          panel.busy(false);
+          holdSends(false);
+          panel.word("");
+          panel.fail(err.message + (err.restore ? "\n" + err.restore : ""));
+        }
+      );
+    }
+  }
+
+  var one = single();
+  if (one) {
+    orderPanel(one);
+  } else {
+    yearPanel();
   }
 
   document.body.appendChild(panel.root);
