@@ -33,24 +33,10 @@ globalThis.TCGB = globalThis.TCGB || {};
 
     var hinted = "";
     var recapped = "";
-    var jumper = null;
 
     function at(selector) {
       return root.querySelector(selector);
     }
-
-    var label = at(".tcg-banner-label");
-    label.addEventListener("click", function () {
-      if (jumper) {
-        jumper();
-      }
-    });
-    label.addEventListener("keydown", function (event) {
-      if (jumper && (event.key === "Enter" || event.key === " ")) {
-        event.preventDefault();
-        jumper();
-      }
-    });
 
     function working() {
       return root.classList.contains("tcg-banner-busy");
@@ -117,24 +103,6 @@ globalThis.TCGB = globalThis.TCGB || {};
           window.removeEventListener("beforeunload", hold);
         }
         tip();
-      },
-
-      // jump makes the heading a control that calls go, or plain text again
-      // when go is null.
-      jump: function (go) {
-        jumper = go;
-        label.classList.toggle("tcg-banner-jumps", !!go);
-        if (go) {
-          label.setAttribute("role", "button");
-        } else {
-          label.removeAttribute("role");
-        }
-      },
-
-      // release lets the page go without asking, for a reload the work
-      // itself calls for; the spinner and the disabled row stay until then.
-      release: function () {
-        window.removeEventListener("beforeunload", hold);
       },
 
       working: working,
