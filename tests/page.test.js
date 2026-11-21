@@ -1,0 +1,255 @@
+// The content script in a window: what a click on the page does.
+
+import { test, expect, describe } from "bun:test";
+import { mount } from "./panel.js";
+
+describe("the panel", () => {
+  test("offers the years TCGplayer lists, and nothing under its buttons", () => {
+    const p = mount();
+    const years = [...p.year().options].map((o) => o.value);
+    expect(years[0]).toBe("2026");
+    expect(years.at(-1)).toBe("2016");
+    expect(years).not.toContain("Last 30 Days");
+    expect(p.button("Orders")).toBeTruthy();
+    expect(p.button("Items")).toBeTruthy();
+    expect(p.below()).toBe(0);
+    expect(p.titled()).toBe(0);
+  });
+
+  test("picks the year the page already shows", () => {
+    const p = mount({ range: "2024" });
+    expect(p.year().value).toBe("2024");
+  });
+
+  test("is not put on a page without the order history", () => {
+    const p = mount({ body: "<form id=login></form>" });
+    expect(p.panel).toBeNull();
+  });
+});
+
+describe("Orders and Items", () => {
+  test("Orders walks the year and saves its orders", async () => {
+    const p = mount({ totals: { 2025: 23 } });
+    p.choose("2025");
+    p.button("Orders").click();
+    expect(p.busy()).toBe(true);
+    await p.idle();
+    const file = await p.file();
+    expect(file.name).toBe("tcg-orders-2025.csv");
+    expect(file.text.trimEnd().split("\n").length).toBe(1 + 23);
+    expect(p.word()).toBe("23 orders");
+    expect(p.done()).toBe(true);
+    expect(p.tip()).toContain("Saved tcg-orders-2025.csv from 3 pages");
+    expect(p.session.state).toEqual({ range: "Last 30 Days", search: "" });
+  });
+
+  test("Items after Orders needs no second walk", async () => {
+    const p = mount({ totals: { 2025: 23 } });
+    p.choose("2025");
+    p.button("Orders").click();
+    await p.idle();
+    const asked = p.session.asked.length;
+    p.button("Items").click();
+    await p.idle();
+    expect(p.session.asked.length).toBe(asked);
+    const file = await p.file(1);
+    expect(file.name).toBe("tcg-items-2025.csv");
+    expect(file.text.split("\n")[0]).toStartWith("TCGplayer Product ID,");
+  });
+
+  test("a year with no orders saves nothing and says so", async () => {
+    const p = mount({ totals: { 2016: 0 } });
+    p.choose("2016");
+    p.button("Orders").click();
+    await p.idle();
+    expect(p.saved.length).toBe(0);
+    expect(p.failed()).toBe(true);
+    expect(p.tip()).toBe("No orders were placed in 2016");
+  });
+
+  test("a refused walk saves nothing, with the reason on the tooltip", async () => {
+    const p = mount({
+      totals: { 2025: 23 },
+      change: (html, n, state) => (state.range === "2025" && n === 2 ? html.replace("Subtotal:", "Discount:") : html),
+    });
+    p.choose("2025");
+    p.button("Orders").click();
+    await p.idle();
+    expect(p.saved.length).toBe(0);
+    expect(p.failed()).toBe(true);
+    expect(p.tip()).toContain('an order summary row labelled "Discount:"');
+    expect(p.session.state.range).toBe("Last 30 Days");
+  });
+
+  test("Escape stops the walk and keeps nothing", async () => {
+    const p = mount({ totals: { 2025: 23 } });
+    p.choose("2025");
+    p.button("Orders").click();
+    p.escape();
+    await p.idle();
+    expect(p.saved.length).toBe(0);
+    expect(p.tip()).toStartWith("Stopped");
+    expect(p.session.state.range).toBe("Last 30 Days");
+  });
+
+  test("the page asks before it is left mid-walk", async () => {
+    const p = mount({ totals: { 2025: 23 } });
+    p.choose("2025");
+    p.button("Orders").click();
+    const event = new p.window.Event("beforeunload", { cancelable: true });
+    p.window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    await p.idle();
+  });
+});
+
+describe("the order number", () => {
+  test("becomes a button that searches for it with the page's own form", () => {
+    const p = mount();
+    const buttons = [...p.document.querySelectorAll("button.tcg-banner-order")];
+    expect(buttons.length).toBe(10);
+    const seller = buttons.find((b) => /^[0-9A-F]{8}-/.test(b.textContent));
+    seller.click();
+    expect(p.submitted).toEqual([
+      {
+        __RequestVerificationToken: "TOKEN",
+        ClearSessionFilters: "False",
+        SearchString: seller.textContent,
+        DateRange: "Last 30 Days",
+      },
+    ]);
+  });
+
+  test("a Direct order searches the same way", () => {
+    const p = mount();
+    const direct = p.document.querySelector("button.tcg-banner-order");
+    expect(direct.textContent).toMatch(/^\d{6}-[0-9A-F]{4}$/);
+    direct.click();
+    expect(p.submitted[0].SearchString).toBe(direct.textContent);
+  });
+});
+
+describe("Send to BAN", () => {
+  test("an order with nothing to send gets none", () => {
+    const p = mount({ change: (html) => html.replaceAll("/magic/ice-age/portent", "/pokemon/base-set/portent") });
+    const first = p.document.querySelector(".orderWrap");
+    expect(first.querySelector("button.tcg-banner-order")).toBeTruthy();
+    expect(first.querySelector("button.tcg-banner-send")).toBeNull();
+  });
+
+  test("every order of Magic cards gets one", () => {
+    const p = mount();
+    expect(p.document.querySelectorAll("button.tcg-banner-send").length).toBe(10);
+  });
+
+  test("opens mtgban's handoff and gives it the order's cards once it is listening", () => {
+    const p = mount();
+    const send = p.document.querySelector("button.tcg-banner-send");
+    send.click();
+    expect(p.tabs.map((t) => t.url)).toEqual(["https://mtgban.com/upload/handoff"]);
+    expect(p.tabs[0].posted).toEqual([]);
+    p.ready();
+    const [{ data, origin }] = p.tabs[0].posted;
+    expect(origin).toBe("https://mtgban.com");
+    expect(data.type).toBe("mtgban-handoff-rows");
+    expect(data.source).toBe("https://store.tcgplayer.com/myaccount/orderhistory");
+    expect(data.csv.split("\n")[0]).toBe("TCGplayer Product ID,Name,Edition,Foil,Condition,Quantity,Price");
+    expect(data.csv.trimEnd().split("\n").length).toBe(1 + data.rows);
+    expect(p.tip()).toStartWith("Sent ");
+  });
+
+  test("listens only to mtgban, from the tab it opened", () => {
+    const p = mount();
+    p.document.querySelector("button.tcg-banner-send").click();
+    p.ready(0, "https://evil.example");
+    p.window.dispatchEvent(new p.window.MessageEvent("message", { data: { type: "mtgban-handoff-ready" }, origin: "https://mtgban.com", source: {} }));
+    expect(p.tabs[0].posted).toEqual([]);
+  });
+
+  test("waits while a walk runs, which owns the panel", async () => {
+    const p = mount({ totals: { 2025: 23 } });
+    p.choose("2025");
+    p.button("Orders").click();
+    const send = p.document.querySelector("button.tcg-banner-send");
+    expect(send.disabled).toBe(true);
+    send.click();
+    expect(p.tabs).toEqual([]);
+    await p.idle();
+    expect(send.disabled).toBe(false);
+    expect(p.word()).toBe("23 orders");
+  });
+
+  test("a send answered during a walk leaves the walk's panel alone", async () => {
+    // Page 2 is held until the send has been answered.
+    let release;
+    const held = new Promise((done) => (release = done));
+    const p = mount({
+      totals: { 2025: 23 },
+      change: (html, n, state) => (state.range === "2025" && n === 2 ? held.then(() => html) : html),
+    });
+    p.document.querySelector("button.tcg-banner-send").click();
+    p.choose("2025");
+    p.button("Orders").click();
+    await new Promise((done) => setTimeout(done, 20));
+    const during = p.word();
+    expect(during).toBe("page 2 of 3");
+    p.ready();
+    expect(p.tabs[0].posted.length).toBe(1);
+    expect(p.word()).toBe(during);
+    expect(p.tip()).not.toContain("Sent ");
+    release();
+    await p.idle();
+    expect(p.word()).toBe("23 orders");
+    expect(p.tip()).toStartWith("Saved tcg-orders-2025.csv");
+  });
+
+  test("a second send closes the first tab, which would wait for good", () => {
+    const p = mount();
+    const sends = p.document.querySelectorAll("button.tcg-banner-send");
+    sends[0].click();
+    sends[1].click();
+    expect(p.tabs[0].closed).toBe(true);
+    expect(p.failed()).toBe(false);
+    p.ready(0);
+    expect(p.tabs[0].posted).toEqual([]);
+    p.ready(1);
+    expect(p.tabs[1].posted.length).toBe(1);
+    expect(p.tip()).toStartWith("Sent ");
+  });
+
+  test("a blocked tab says so", () => {
+    const p = mount({ blockPopups: true });
+    p.document.querySelector("button.tcg-banner-send").click();
+    expect(p.failed()).toBe(true);
+    expect(p.tip()).toBe("The upload page was blocked; use the CSV");
+  });
+
+  test("a line not in English is left out and counted", () => {
+    const p = mount({ change: (html) => html.replace("Condition: Lightly Played\n", "Condition: Lightly Played - Japanese\n") });
+    const wrap = p.document.querySelector(".orderWrap");
+    wrap.querySelector("button.tcg-banner-send").click();
+    p.ready();
+    expect(p.tabs[0].posted[0].data.rows).toBe(2);
+    expect(p.tip()).toContain("1 line not in English, not sent");
+  });
+
+  test("a refund is said not to name its cards", () => {
+    const p = mount();
+    const wrap = [...p.document.querySelectorAll(".orderWrap")].find((w) => w.querySelector(".orderAlert"));
+    wrap.querySelector("button.tcg-banner-send").click();
+    p.ready();
+    expect(p.tip()).toContain("does not say which cards it covers");
+  });
+
+  test("lines of another game are left out and counted", () => {
+    const p = mount({
+      change: (html) => html.replace("https://store.tcgplayer.com/magic/ice-age/portent", "https://store.tcgplayer.com/pokemon/base-set/portent"),
+    });
+    const wrap = p.document.querySelector(".orderWrap");
+    wrap.querySelector("button.tcg-banner-send").click();
+    p.ready();
+    // The first of the order's three Portent lines is now a Pokemon card.
+    expect(p.tabs[0].posted[0].data.rows).toBe(2);
+    expect(p.tip()).toContain("1 line of another game not sent");
+  });
+});
